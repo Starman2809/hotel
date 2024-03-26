@@ -1,1 +1,0 @@
-DB_PATH="C:\projects\hotel_automation\database\hotel.accdb"
