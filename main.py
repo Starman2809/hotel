@@ -1,34 +1,23 @@
-from db.models import Client
-from renderer import HotelRenderer
-
-
-class HotelController:
-
-    def __init__(self):
-        self.renderer = HotelRenderer()
-
-    def create_new_client_window(self):
-        # TODO: Add success message and error message to view
-        self.renderer.create_new_client_window()
-
-    def book_a_room_window(self):
-        self.renderer.book_a_room()
-
-    def read_all_clients_window(self):
-        self.renderer.read_all_clients_window()
-
-    def update_client_window(self):
-        self.renderer.update_client_window()
-
-    def delete_client_window(self):
-        self.renderer.delete_client_window()
+from hotel.models import Employee
+from hotel.view import ClientView, EmployeeView
 
 
 def main():
-    hotel_controller = HotelController()
-    # hotel_controller.create_new_client_window()
-    hotel_controller.book_a_room_window()
-    # hotel_controller.read_all_clients_window()
+    client_view = ClientView()
+    # client_view.create_new_client_window()
+    # client_view.read_and_delete_all_clients_window()
+    # client_id = 5
+    # client_view.update_client_window(client_id)
+
+    employee_view = EmployeeView()
+    # employee_view.create_new_employee_window()
+    # employee_view.read_and_delete_all_employee_window()
+    employee_id = 6
+    employee_view.update_employee_window(employee_id)
+
+
+    # hotel_controller.book_a_room_window()
+
 
     # hotel_controller = HotelController()
     # hotel_controller.create_new_client_window()
@@ -46,10 +35,10 @@ def main():
     #     print(hotel_controller.get_columns_from_table(item))
     #     print("-----------------------------------")
 
-    clients = Client.get_all_clients()
-    for client in clients:
-        print(client)
-        print("----------------------------------")
+    # clients = Employee.all()
+    # for client in clients:
+    #     print(client)
+    #     print("----------------------------------")
     # print(hotel_controller.get_columns_from_table("Клиенты"))
     # print(hotel_controller.get_tables())
 
