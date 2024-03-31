@@ -1,20 +1,26 @@
 from hotel.models import Employee
-from hotel.view import ClientView, EmployeeView
+from hotel.view import ClientView, EmployeeView, HotelRoomView
 
 
 def main():
-    client_view = ClientView()
+    # client_view = ClientView()
     # client_view.create_new_client_window()
     # client_view.read_and_delete_all_clients_window()
     # client_id = 5
     # client_view.update_client_window(client_id)
 
-    employee_view = EmployeeView()
+    # employee_view = EmployeeView()
     # employee_view.create_new_employee_window()
-    # employee_view.read_and_delete_all_employee_window()
-    employee_id = 6
-    employee_view.update_employee_window(employee_id)
+    # employee_view.read_and_delete_all_employees_window()
+    # employee_id = 6
+    # employee_view.update_employee_window(employee_id)
 
+
+    hotel_room_view = HotelRoomView()
+    hotel_room_view.create_new_room_window()
+    # hotel_room_view.read_and_delete_all_hotel_rooms_window()
+    # hotel_room_id = 1
+    # hotel_room_view.update_hotel_room_window()
 
     # hotel_controller.book_a_room_window()
 

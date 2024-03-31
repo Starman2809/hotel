@@ -10,10 +10,6 @@ class DBObject:
     database_manager = DatabaseManager(DB_PATH)
 
 
-class HotelRoom:
-    pass
-
-
 class RoomType:
     pass
 
@@ -356,6 +352,9 @@ class WorkSchedule(DBObject):
 
         return WorkScheduleSerializer.get_all_work_schedule_types_as_dict(rows)
 
+
+class HotelRoom(DBObject):
+    pass
 
 class AdditionalService:
     pass

@@ -1,4 +1,4 @@
-from app.renderer import ClientRenderer, EmployeeRenderer
+from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer
 
 
 class ClientView:
@@ -24,8 +24,22 @@ class EmployeeView:
         # TODO: Add success message and error message to view
         self.renderer.draw_create_new_employee_window()
 
-    def read_and_delete_all_employee_window(self):
+    def read_and_delete_all_employees_window(self):
         self.renderer.draw_read_all_employees_window()
 
     def update_employee_window(self, employee_id):
         self.renderer.draw_update_employee_window(employee_id)
+
+
+class HotelRoomView:
+    def __init__(self):
+        self.renderer = HotelRoomRenderer()
+
+    def create_new_room_window(self):
+        self.renderer.draw_create_new_room_window()
+
+    def read_and_delete_all_hotel_rooms_window(self):
+        pass
+
+    def update_hotel_room_window(self):
+        pass

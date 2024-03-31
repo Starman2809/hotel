@@ -1,9 +1,11 @@
+from abc import ABC, abstractmethod
+
 from db.serializers import ClientDataSerializer, EmployeeSerializer
 from hotel.models import Client, Employee
 from utils.utils import get_key_from_dict_by_value
 
 
-class ClientController:
+class BaseController(ABC):
     def __init__(self):
         self.entries = {}
         self.root = None
@@ -14,7 +16,17 @@ class ClientController:
         """
         self.entries = {}
 
-    def submit_create_client_data(self):
+    @abstractmethod
+    def submit_create(self):
+        pass
+
+    @abstractmethod
+    def submit_update(self, object_id):
+        pass
+
+
+class ClientController(BaseController):
+    def submit_create(self):
         first_name_text = self.entries["first_name_entry"].get()
         last_name_text = self.entries["last_name_entry"].get()
         patronymic_text = self.entries["patronymic_entry"].get()
@@ -37,7 +49,7 @@ class ClientController:
 
         self.cleanup()
 
-    def submit_update_client_data(self, client_id):
+    def submit_update(self, client_id):
         first_name_text = self.entries["first_name_entry"].get()
         last_name_text = self.entries["last_name_entry"].get()
         patronymic_text = self.entries["patronymic_entry"].get()
@@ -61,19 +73,8 @@ class ClientController:
         self.cleanup()
 
 
-class EmployeeController:
-
-    def __init__(self):
-        self.entries = {}
-        self.root = None
-
-    def cleanup(self):
-        """
-        Method for deleting old values from memory after use
-        """
-        self.entries = {}
-
-    def submit_create_employee_data(self):
+class EmployeeController(BaseController):
+    def submit_create(self):
 
         job_type_id = get_key_from_dict_by_value(self.entries["job_type_list"], self.entries["job_type_combobox_selected_text"].get())
         department_type_id = get_key_from_dict_by_value(self.entries["department_list"], self.entries["department_type_combobox_selected_text"].get())
@@ -113,9 +114,7 @@ class EmployeeController:
 
         self.cleanup()
 
-    def submit_update_employee_data(self, employee_id):
-        print('-----------------')
-        print(employee_id)
+    def submit_update(self, employee_id):
         job_type_id = get_key_from_dict_by_value(self.entries["job_type_list"], self.entries["job_type_combobox_selected_text"].get())
         department_type_id = get_key_from_dict_by_value(self.entries["department_list"], self.entries["department_type_combobox_selected_text"].get())
         work_schedule_type_id = get_key_from_dict_by_value(self.entries["work_schedule_list"], self.entries["work_schedule_combobox_selected_text"].get())
@@ -153,3 +152,11 @@ class EmployeeController:
         Employee.update(employee_id, serialized_employee)
 
         self.cleanup()
+
+
+class HotelRoomController(BaseController):
+    def submit_create(self):
+        pass
+
+    def submit_update(self, room_id):
+        pass

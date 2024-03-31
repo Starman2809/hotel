@@ -8,7 +8,7 @@ from tkcalendar import Calendar
 from hotel.models import Client, JobType, Department, WorkSchedule, Employee
 from db.serializers import ClientDataSerializer, EmployeeSerializer
 from design_objects.table import ClientsTable, EmployeesTable
-from hotel.controller import EmployeeController, ClientController
+from hotel.controller import EmployeeController, ClientController, HotelRoomController
 
 
 class ClientRenderer:
@@ -23,7 +23,7 @@ class ClientRenderer:
         self.__create_new_client_input_grid(root)
 
         submit_button = tkinter.Button(
-            root, text="Отправить", command=self.controller.submit_create_client_data
+            root, text="Отправить", command=self.controller.submit_create
         )
         submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
 
@@ -61,7 +61,7 @@ class ClientRenderer:
         self.__update_new_client_input_grid(root, client_id)
 
         submit_button = tkinter.Button(
-            root, text="Отправить", command=partial(self.controller.submit_update_client_data, client_id)
+            root, text="Отправить", command=partial(self.controller.submit_update, client_id)
         )
         submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
 
@@ -149,7 +149,7 @@ class EmployeeRenderer:
         self.__create_new_employee_input_grid(root)
 
         submit_button = tkinter.Button(
-            root, text="Отправить", command=self.controller.submit_create_employee_data
+            root, text="Отправить", command=self.controller.submit_create
         )
         submit_button.grid(row=14, columnspan=7, padx=5, pady=5)
 
@@ -299,8 +299,42 @@ class EmployeeRenderer:
         self.__update_employee_input_grid(root, employee_id)
 
         submit_button = tkinter.Button(
-            root, text="Отправить", command=partial(self.controller.submit_update_employee_data, employee_id)
+            root, text="Отправить", command=partial(self.controller.submit_update, employee_id)
         )
         submit_button.grid(row=14, columnspan=7, padx=5, pady=5)
 
         root.mainloop()
+
+
+class HotelRoomRenderer:
+    def __init__(self):
+        self.controller = HotelRoomController()
+
+    def draw_create_new_room_window(self):
+        root = tkinter.Tk()
+        root.title("Создание нового номера")
+        root.geometry("800x600")
+
+        self.__create_new_room_input_grid(root)
+
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=self.controller.submit_create
+        )
+        submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
+
+        root.mainloop()
+
+    def __create_new_room_input_grid(self, root):
+        items_to_draw = {
+            "first_name_entry": "Фамилия:",
+            "last_name_entry": "Имя:",
+            "patronymic_entry": "Отчество:",
+            "birthday_date_calendar": "Дата рождения:",
+            "email_entry": "Электронная почта:",
+            "phone_number_entry": "Номер телефона:",
+            "passport_number_entry": "Номер паспорта:",
+        }
+        self.draw_create_room_form(root, items_to_draw)
+
+    def draw_create_room_form(self, root, items_to_draw):
+        pass
