@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from db.serializers import ClientDataSerializer, EmployeeSerializer
-from hotel.models import Client, Employee
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
+from hotel.models import Client, Employee, HotelRoom
 from utils.utils import get_key_from_dict_by_value
 
 
@@ -156,7 +156,16 @@ class EmployeeController(BaseController):
 
 class HotelRoomController(BaseController):
     def submit_create(self):
-        pass
+        employee_id = get_key_from_dict_by_value(self.entries["employee_list"], self.entries["employee_combobox_selected_text"].get())
+        room_type_id = get_key_from_dict_by_value(self.entries["room_type_list"], self.entries["room_type_combobox_selected_text"].get())
+
+        serialized_hotel_room = HotelRoomSerializer(employee_id=employee_id, room_type_id=room_type_id)
+        HotelRoom.create(serialized_hotel_room)
+        self.cleanup()
 
     def submit_update(self, room_id):
-        pass
+        employee_id = get_key_from_dict_by_value(self.entries["employee_list"], self.entries["employee_combobox_selected_text"].get())
+        room_type_id = get_key_from_dict_by_value(self.entries["room_type_list"], self.entries["room_type_combobox_selected_text"].get())
+        serialized_hotel_room = HotelRoomSerializer(employee_id=employee_id, room_type_id=room_type_id)
+        HotelRoom.update(room_id, serialized_hotel_room)
+        self.cleanup()

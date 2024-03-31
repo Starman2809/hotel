@@ -39,7 +39,7 @@ class HotelRoomView:
         self.renderer.draw_create_new_room_window()
 
     def read_and_delete_all_hotel_rooms_window(self):
-        pass
+        self.renderer.draw_read_all_hotel_rooms_window()
 
-    def update_hotel_room_window(self):
-        pass
+    def update_hotel_room_window(self, room_id):
+        self.renderer.draw_update_hotel_room_window(room_id)

@@ -5,9 +5,9 @@ from typing import Dict
 
 from tkcalendar import Calendar
 
-from hotel.models import Client, JobType, Department, WorkSchedule, Employee
-from db.serializers import ClientDataSerializer, EmployeeSerializer
-from design_objects.table import ClientsTable, EmployeesTable
+from hotel.models import Client, JobType, Department, WorkSchedule, Employee, RoomType, HotelRoom
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
+from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable
 from hotel.controller import EmployeeController, ClientController, HotelRoomController
 
 
@@ -320,21 +320,91 @@ class HotelRoomRenderer:
         submit_button = tkinter.Button(
             root, text="Отправить", command=self.controller.submit_create
         )
-        submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
+        submit_button.grid(row=3, columnspan=7, padx=5, pady=5)
 
         root.mainloop()
 
     def __create_new_room_input_grid(self, root):
         items_to_draw = {
-            "first_name_entry": "Фамилия:",
-            "last_name_entry": "Имя:",
-            "patronymic_entry": "Отчество:",
-            "birthday_date_calendar": "Дата рождения:",
-            "email_entry": "Электронная почта:",
-            "phone_number_entry": "Номер телефона:",
-            "passport_number_entry": "Номер паспорта:",
+            "employee_combobox": "Сотрудник:",
+            "room_type_combobox": "Категория номера:",
         }
         self.draw_create_room_form(root, items_to_draw)
 
     def draw_create_room_form(self, root, items_to_draw):
-        pass
+        self.controller.entries["employee_list"] = Employee.all_as_dict()
+        self.controller.entries["room_type_list"] = RoomType.all_as_dict()
+
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+
+            if "employee_combobox" in field_name:
+                self.controller.entries["employee_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["employee_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["employee_list"].values())
+            elif "room_type_combobox" in field_name:
+                self.controller.entries["room_type_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["room_type_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["room_type_list"].values())
+
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def draw_read_all_hotel_rooms_window(self):
+        self.controller.root = tkinter.Tk()
+        root = self.controller.root
+        root.title("Список номеров")
+        root.geometry("1800x600")
+
+        self.__display_all_hotel_rooms_grid(root)
+
+        root.mainloop()
+
+    def __display_all_hotel_rooms_grid(self, root):
+        all_hotel_rooms_table = HotelRoomTable(root, columns=7, cell_width=265, cell_height=65)
+        all_hotel_rooms_table.draw_all()
+
+    def draw_update_hotel_room_window(self, room_id):
+        root = tkinter.Tk()
+        root.title("Изменение данных сотрудника")
+        root.geometry("1000x800")
+
+        self.__update_hotel_room_input_grid(root, room_id)
+
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=partial(self.controller.submit_update, room_id)
+        )
+        submit_button.grid(row=14, columnspan=7, padx=5, pady=5)
+
+        root.mainloop()
+
+    def __update_hotel_room_input_grid(self, root: tkinter.Tk, room_id: int):
+        # TODO: добавить значения по умолчанию для формы
+        # hotel_room_dict = HotelRoomSerializer.prepare_data_to_print([HotelRoom.get(room_id)])[0]
+        items_to_draw = {
+            "employee_combobox": "Сотрудник:",
+            "room_type_combobox": "Категория номера:",
+        }
+        self.draw_update_hotel_room_form(root, items_to_draw)
+
+    def draw_update_hotel_room_form(self, root: tkinter.Tk, items_to_draw: Dict):
+
+        # TODO: Добавить значения по умолчанию для combobox из hotel_room_dict
+
+        self.controller.entries["employee_list"] = Employee.all_as_dict()
+        self.controller.entries["room_type_list"] = RoomType.all_as_dict()
+
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+
+            if "employee_combobox" in field_name:
+                self.controller.entries["employee_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["employee_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["employee_list"].values())
+            elif "room_type_combobox" in field_name:
+                self.controller.entries["room_type_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["room_type_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["room_type_list"].values())
+
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
