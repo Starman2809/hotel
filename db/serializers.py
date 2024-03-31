@@ -1,7 +1,13 @@
 from typing import List, Dict
 
+from utils.utils import insert_new_lines, convert_number_to_status
 
-class ClientDataSerializer:
+
+class BaseSerializer:
+    pass
+
+
+class ClientDataSerializer(BaseSerializer):
     def __init__(
             self,
             first_name_text: str,
@@ -60,7 +66,7 @@ class ClientDataSerializer:
         return result
 
 
-class EmployeeSerializer:
+class EmployeeSerializer(BaseSerializer):
 
     def __init__(
             self,
@@ -137,52 +143,73 @@ class EmployeeSerializer:
             result.append(client_info_dict)
         return result
 
+    @classmethod
+    def get_all_as_dict(cls, rows) -> Dict:
+        result = {}
+        for row in rows:
+            result[row[0]] = f"{row[1]} {row[2]} {row[3]}"
+        return result
 
-class JobTypeSerializer:
 
-    # @classmethod
-    # def get_all_job_types_as_list(cls, rows):
-    #     result = []
-    #     for row in rows:
-    #         result.append(row[1])
-    #     return result
+class JobTypeSerializer(BaseSerializer):
 
     @classmethod
-    def get_all_job_types_as_dict(cls, rows) -> Dict:
+    def get_all_as_dict(cls, rows) -> Dict:
         result = {}
         for row in rows:
             result[row[0]] = row[1]
         return result
 
 
-class DepartmentSerializer:
-
-    # @classmethod
-    # def get_all_department_types_as_list(cls, rows):
-    #     result = []
-    #     for row in rows:
-    #         result.append(row[1])
-    #     return result
+class DepartmentSerializer(BaseSerializer):
 
     @classmethod
-    def get_all_department_types_as_dict(cls, rows) -> Dict:
+    def get_all_as_dict(cls, rows) -> Dict:
         result = {}
         for row in rows:
             result[row[0]] = row[1]
         return result
 
 
-class WorkScheduleSerializer:
-
-    # @classmethod
-    # def get_all_work_schedule_types_as_list(cls, rows):
-    #     result = []
-    #     for row in rows:
-    #         result.append(row[1])
-    #     return result
+class WorkScheduleSerializer(BaseSerializer):
 
     @classmethod
-    def get_all_work_schedule_types_as_dict(cls, rows) -> Dict:
+    def get_all_as_dict(cls, rows) -> Dict:
+        result = {}
+        for row in rows:
+            result[row[0]] = row[1]
+        return result
+
+
+class HotelRoomSerializer(BaseSerializer):
+    def __init__(
+        self,
+        employee_id: int,
+        room_type_id: int,
+    ):
+        self.employee_id = employee_id
+        self.room_type_id = room_type_id
+
+    @staticmethod
+    def prepare_data_to_print(hotel_room_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in hotel_room_rows:
+            hotel_room_info_dict = {
+                "id": row[0],
+                "employee_full_name": f"{row[1]} {row[2]} {row[3]}",
+                "room_type_name": row[4],
+                "room_type_description": insert_new_lines(row[5], 40),
+                "room_type_price": row[6],
+                "active": convert_number_to_status(row[7]),
+            }
+            result.append(hotel_room_info_dict)
+        return result
+
+
+class RoomTypeSerializer(BaseSerializer):
+    @classmethod
+    def get_all_as_dict(cls, rows) -> Dict:
         result = {}
         for row in rows:
             result[row[0]] = row[1]

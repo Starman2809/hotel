@@ -1,17 +1,19 @@
+from abc import ABC, abstractmethod
 from typing import List
 
 from config.settings import DB_PATH
 from db.manager import DatabaseManager
 from db.serializers import (ClientDataSerializer, JobTypeSerializer, DepartmentSerializer, WorkScheduleSerializer,
-                            EmployeeSerializer)
+                            EmployeeSerializer, BaseSerializer, HotelRoomSerializer, RoomTypeSerializer)
 
 
-class DBObject:
+class DBObject(ABC):
     database_manager = DatabaseManager(DB_PATH)
 
-
-class RoomType:
-    pass
+    # @classmethod
+    # @abstractmethod
+    # def create(cls, serialized_object: BaseSerializer):
+    #     pass
 
 
 class Client(DBObject):
@@ -25,7 +27,7 @@ class Client(DBObject):
     passport_number = None
 
     @classmethod
-    def get_all_clients(cls):
+    def all(cls):
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
@@ -171,6 +173,7 @@ class Employee(DBObject):
 
         cursor.close()
         cls.database_manager.close()
+
     @classmethod
     def all(cls) -> List[str]:
         cls.database_manager.connect()
@@ -184,6 +187,10 @@ class Employee(DBObject):
         cls.database_manager.close()
 
         return rows
+
+    @classmethod
+    def all_as_dict(cls):
+        return EmployeeSerializer.get_all_as_dict(cls.all())
 
     @classmethod
     def get(cls, employee_id: int):
@@ -226,7 +233,6 @@ class Employee(DBObject):
             serialized_employee.work_status,
             employee_id,
         )
-        print(values)
         cursor.execute(query_string, values)
 
         connection.commit()
@@ -252,20 +258,6 @@ class JobType(DBObject):
     id = None
     description = None
 
-    # @classmethod
-    # def all(cls) -> List[str]:
-    #     cls.database_manager.connect()
-    #
-    #     connection = cls.database_manager.connection
-    #     cursor = connection.cursor()
-    #     cursor.execute("SELECT * FROM Должности ORDER BY id ASC")
-    #
-    #     rows = cursor.fetchall()
-    #
-    #     cursor.close()
-    #     cls.database_manager.close()
-    #
-    #     return JobTypeSerializer.get_all_job_types_as_list(rows)
 
     @classmethod
     def all_as_dict(cls):
@@ -280,27 +272,12 @@ class JobType(DBObject):
         cursor.close()
         cls.database_manager.close()
 
-        return JobTypeSerializer.get_all_job_types_as_dict(rows)
+        return JobTypeSerializer.get_all_as_dict(rows)
 
 
 class Department(DBObject):
     id = None
     description = None
-
-    # @classmethod
-    # def all(cls) -> List[str]:
-    #     cls.database_manager.connect()
-    #
-    #     connection = cls.database_manager.connection
-    #     cursor = connection.cursor()
-    #     cursor.execute("SELECT * FROM Отделы ORDER BY id ASC")
-    #
-    #     rows = cursor.fetchall()
-    #
-    #     cursor.close()
-    #     cls.database_manager.close()
-    #
-    #     return DepartmentSerializer.get_all_department_types_as_list(rows)
 
     @classmethod
     def all_as_dict(cls):
@@ -315,27 +292,12 @@ class Department(DBObject):
         cursor.close()
         cls.database_manager.close()
 
-        return DepartmentSerializer.get_all_department_types_as_dict(rows)
+        return DepartmentSerializer.get_all_as_dict(rows)
 
 
 class WorkSchedule(DBObject):
     id = None
     description = None
-
-    # @classmethod
-    # def all(cls) -> List[str]:
-    #     cls.database_manager.connect()
-    #
-    #     connection = cls.database_manager.connection
-    #     cursor = connection.cursor()
-    #     cursor.execute("SELECT * FROM [График работы] ORDER BY id ASC")
-    #
-    #     rows = cursor.fetchall()
-    #
-    #     cursor.close()
-    #     cls.database_manager.close()
-    #
-    #     return WorkScheduleSerializer.get_all_work_schedule_types_as_list(rows)
 
     @classmethod
     def all_as_dict(cls):
@@ -350,11 +312,141 @@ class WorkSchedule(DBObject):
         cursor.close()
         cls.database_manager.close()
 
-        return WorkScheduleSerializer.get_all_work_schedule_types_as_dict(rows)
+        return WorkScheduleSerializer.get_all_as_dict(rows)
 
 
 class HotelRoom(DBObject):
-    pass
+    id = None
+    employee = None
+    room_type = None
+    # Доступна ли комната для использования или нет впринципе, мб ее закрыли на ремонт и ее нельзя бронировать впринципе
+    status = True
+
+    @classmethod
+    def all(cls):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Имя], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC")
+
+        rows = cursor.fetchall()
+
+        cls.database_manager.close()
+
+        return rows
+
+    @classmethod
+    def create(cls, serialized_hotel_room: HotelRoomSerializer):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """INSERT INTO [Гостиничные номера] ([Сотрудник], [Категория], [Статус]) VALUES (?,?,?)"""
+        values = (
+            serialized_hotel_room.employee_id,
+            serialized_hotel_room.room_type_id,
+            True
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def deactivate(cls, room_id: int):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        query_string = f"""UPDATE [Гостиничные Номера] SET [Статус] = False WHERE id = ?"""
+
+        values = (
+            room_id,
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def activate(cls, room_id: int):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        query_string = f"""UPDATE [Гостиничные Номера] SET [Статус] = True WHERE id = ?"""
+
+        values = (
+            room_id,
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def get(cls, room_id: int):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """SELECT * FROM [Гостиничные номера] WHERE id = ?"""
+        cursor.execute(query_string, (room_id,))
+
+        row = cursor.fetchone()
+
+        cursor.close()
+        cls.database_manager.close()
+
+        return row
+
+    @classmethod
+    def update(cls, hotel_room_id: int, serialized_hotel_room: HotelRoomSerializer):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        query_string = """UPDATE [Гостиничные номера] SET [Сотрудник] = ?, [Категория] = ? WHERE id = ?"""
+        values = (
+            serialized_hotel_room.employee_id,
+            serialized_hotel_room.room_type_id,
+            hotel_room_id
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+class RoomType(DBObject):
+    @classmethod
+    def all(cls):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM [Категории номеров] ORDER BY id ASC")
+
+        rows = cursor.fetchall()
+
+        cls.database_manager.close()
+
+        return rows
+
+    @classmethod
+    def all_as_dict(cls):
+        return RoomTypeSerializer.get_all_as_dict(cls.all())
+
 
 class AdditionalService:
     pass

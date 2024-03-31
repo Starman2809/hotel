@@ -2,8 +2,8 @@ import tkinter
 from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee
-from db.serializers import ClientDataSerializer, EmployeeSerializer
+from hotel.models import Client, Employee, HotelRoom
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
 
 
 class Table(tkinter.Canvas):
@@ -37,22 +37,34 @@ class Table(tkinter.Canvas):
         y1 = y0 + self.cell_height
         button.place(x=(x0 + x1) / 2, y=(y0 + y1) / 2, anchor="center")
 
-    # def clear(self):
-    #     for cell_id in self.cells.values():
-    #         self.delete(cell_id)
-    #     self.cells = {}
+    def draw_all(self):
+        pass
+
+    def redraw(self):
+        # Удаляем все объекты на Canvas
+        self.delete("all")
+        # Рисуем сетку заново
+        self.draw_grid()
+        # Обновляем данные внутри обьекта
+        self.update_data()
+        # Ваш код для рисования объектов заново
+        self.draw_all()
+
+    def update_data(self):
+        pass
 
 
 class ClientsTable(Table):
     def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
         self.parent = parent
-        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.get_all_clients())
+        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
         self.rows = len(self.all_clients_data)
         super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
 
-    def draw_all(self):
-        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.get_all_clients())
+    def update_data(self):
+        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
 
+    def draw_all(self):
         self.pack(fill="both", expand=True)
 
         self.set_cell(0, 0, "Номер")
@@ -78,16 +90,6 @@ class ClientsTable(Table):
             button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_client, client["id"]))
             self.set_button_cell(index + 1, 8, button)
 
-
-    def redraw(self):
-        # Удаляем все объекты на Canvas
-        self.delete("all")
-        # Рисуем сетку заново
-        self.draw_grid()
-        # Ваш код для рисования объектов заново
-        # Пример:
-        self.draw_all()
-
     def delete_client(self, client_id: int):
         Client.delete_client(client_id)
         self.redraw()
@@ -96,13 +98,14 @@ class ClientsTable(Table):
 class EmployeesTable(Table):
     def __init__(self, parent, columns=3, cell_width=50, cell_height=30, **kwargs):
         self.parent = parent
-        self.all_employees_data = ClientDataSerializer.prepare_data_to_print(Employee.all())
+        self.all_employees_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
         self.rows = len(self.all_employees_data)
         super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
 
-    def draw_all(self):
+    def update_data(self):
         self.all_employees_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
 
+    def draw_all(self):
         self.pack(fill="both", expand=True)
 
         self.set_cell(0, 0, "Номер")
@@ -144,11 +147,47 @@ class EmployeesTable(Table):
         Employee.delete(employee_id)
         self.redraw()
 
-    def redraw(self):
-        # Удаляем все объекты на Canvas
-        self.delete("all")
-        # Рисуем сетку заново
-        self.draw_grid()
-        # Ваш код для рисования объектов заново
-        # Пример:
-        self.draw_all()
+
+class HotelRoomTable(Table):
+    def __init__(self, parent, columns=7, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_hotel_rooms_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
+        self.rows = len(self.all_hotel_rooms_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def update_data(self):
+        self.all_hotel_rooms_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "ФИО сотрудника")
+        self.set_cell(0, 2, "Тип")
+        self.set_cell(0, 3, "Описание")
+        self.set_cell(0, 4, "Цена")
+        self.set_cell(0, 5, "Активна")
+        self.set_cell(0, 6, "")
+
+        for index, hotel_room in enumerate(self.all_hotel_rooms_data):
+            self.set_cell(index + 1, 0, hotel_room['id'])
+            self.set_cell(index + 1, 1, hotel_room['employee_full_name'])
+            self.set_cell(index + 1, 2, hotel_room['room_type_name'])
+            self.set_cell(index + 1, 3, hotel_room['room_type_description'])
+            self.set_cell(index + 1, 4, hotel_room['room_type_price'])
+            self.set_cell(index + 1, 5, hotel_room['active'])
+
+            if hotel_room['active'] == "Да":
+                button = tkinter.Button(self.parent, text="Деактивировать", command=partial(self.deactivate_hotel_room, hotel_room["id"]))
+            else:
+                button = tkinter.Button(self.parent, text="Активировать", command=partial(self.activate_hotel_room, hotel_room["id"]))
+
+            self.set_button_cell(index + 1, 6, button)
+
+    def deactivate_hotel_room(self, room_id: int):
+        HotelRoom.deactivate(room_id)
+        self.redraw()
+
+    def activate_hotel_room(self, room_id: int):
+        HotelRoom.activate(room_id)
+        self.redraw()
