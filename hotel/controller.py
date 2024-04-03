@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
-from hotel.models import Client, Employee, HotelRoom
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType
 from utils.utils import get_key_from_dict_by_value
 
 
@@ -68,7 +68,7 @@ class ClientController(BaseController):
             passport_number_text=passport_number_text,
         )
 
-        Client.update_client(client_id, serialized_client)
+        Client.update(client_id, serialized_client)
 
         self.cleanup()
 
@@ -169,3 +169,21 @@ class HotelRoomController(BaseController):
         serialized_hotel_room = HotelRoomSerializer(employee_id=employee_id, room_type_id=room_type_id)
         HotelRoom.update(room_id, serialized_hotel_room)
         self.cleanup()
+
+
+class AdditionalServiceController(BaseController):
+    def submit_create(self):
+        service_name = self.entries["service_name_entry"].get()
+        service_description = self.entries["service_description_entry"].get()
+        service_price = self.entries["service_price_entry"].get()
+
+        serialized_service = AdditionalServiceSerializer(service_name=service_name, service_description=service_description, service_price=service_price)
+        AdditionalServiceType.create(serialized_service)
+
+    def submit_update(self, object_id):
+        service_name = self.entries["service_name_entry"].get()
+        service_description = self.entries["service_description_entry"].get()
+        service_price = self.entries["service_price_entry"].get()
+
+        serialized_service = AdditionalServiceSerializer(service_name=service_name, service_description=service_description, service_price=service_price)
+        AdditionalServiceType.update(object_id, serialized_service)

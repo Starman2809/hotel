@@ -1,4 +1,4 @@
-from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer
+from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer
 
 
 class ClientView:
@@ -38,8 +38,22 @@ class HotelRoomView:
     def create_new_room_window(self):
         self.renderer.draw_create_new_room_window()
 
-    def read_and_delete_all_hotel_rooms_window(self):
-        self.renderer.draw_read_all_hotel_rooms_window()
+    def list_and_deactivate_all_hotel_rooms_window(self):
+        self.renderer.draw_list_and_deactivate_hotel_rooms_window()
 
     def update_hotel_room_window(self, room_id):
         self.renderer.draw_update_hotel_room_window(room_id)
+
+
+class AdditionalServiceView:
+    def __init__(self):
+        self.renderer = AdditionalServiceRenderer()
+
+    def create_new_service_window(self):
+        self.renderer.draw_create_new_service_window()
+
+    def read_and_delete_service_window(self):
+        self.renderer.draw_list_and_delete_service_window()
+
+    def update_service_window(self, service_id):
+        self.renderer.draw_update_service_window(service_id)

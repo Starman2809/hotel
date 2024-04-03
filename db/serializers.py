@@ -141,6 +141,7 @@ class EmployeeSerializer(BaseSerializer):
                 "work_status": row[13],
             }
             result.append(client_info_dict)
+
         return result
 
     @classmethod
@@ -148,6 +149,7 @@ class EmployeeSerializer(BaseSerializer):
         result = {}
         for row in rows:
             result[row[0]] = f"{row[1]} {row[2]} {row[3]}"
+
         return result
 
 
@@ -158,6 +160,7 @@ class JobTypeSerializer(BaseSerializer):
         result = {}
         for row in rows:
             result[row[0]] = row[1]
+
         return result
 
 
@@ -168,6 +171,7 @@ class DepartmentSerializer(BaseSerializer):
         result = {}
         for row in rows:
             result[row[0]] = row[1]
+
         return result
 
 
@@ -178,6 +182,7 @@ class WorkScheduleSerializer(BaseSerializer):
         result = {}
         for row in rows:
             result[row[0]] = row[1]
+
         return result
 
 
@@ -204,6 +209,7 @@ class HotelRoomSerializer(BaseSerializer):
                 "active": convert_number_to_status(row[7]),
             }
             result.append(hotel_room_info_dict)
+
         return result
 
 
@@ -213,4 +219,27 @@ class RoomTypeSerializer(BaseSerializer):
         result = {}
         for row in rows:
             result[row[0]] = row[1]
+
+        return result
+
+
+class AdditionalServiceSerializer(BaseSerializer):
+    def __init__(self, service_name, service_description, service_price):
+        self.service_name = service_name
+        self.service_description = service_description
+        self.service_price = float(service_price)
+
+    @staticmethod
+    def prepare_data_to_print(additional_service_type_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in additional_service_type_rows:
+            service_info_dict = {
+                "id": row[0],
+                "service_name": row[1],
+                "service_description": insert_new_lines(row[2], 40),
+                "service_price": row[3],
+            }
+            result.append(service_info_dict)
+
         return result

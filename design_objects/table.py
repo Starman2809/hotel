@@ -1,9 +1,10 @@
 import tkinter
+from abc import abstractmethod
 from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee, HotelRoom
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer
 
 
 class Table(tkinter.Canvas):
@@ -50,6 +51,7 @@ class Table(tkinter.Canvas):
         # Ваш код для рисования объектов заново
         self.draw_all()
 
+    @abstractmethod
     def update_data(self):
         pass
 
@@ -91,7 +93,7 @@ class ClientsTable(Table):
             self.set_button_cell(index + 1, 8, button)
 
     def delete_client(self, client_id: int):
-        Client.delete_client(client_id)
+        Client.delete(client_id)
         self.redraw()
 
 
@@ -191,3 +193,36 @@ class HotelRoomTable(Table):
     def activate_hotel_room(self, room_id: int):
         HotelRoom.activate(room_id)
         self.redraw()
+
+
+class AdditionalServiceTable(Table):
+    def __init__(self, parent, columns=5, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_services_data = AdditionalServiceSerializer.prepare_data_to_print(AdditionalServiceType.all())
+        self.rows = len(self.all_services_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "Название")
+        self.set_cell(0, 2, "Описание")
+        self.set_cell(0, 3, "Стоимость")
+        self.set_cell(0, 4, "")
+
+        for index, service in enumerate(self.all_services_data):
+            self.set_cell(index + 1, 0, service['id'])
+            self.set_cell(index + 1, 1, service['service_name'])
+            self.set_cell(index + 1, 2, service['service_description'])
+            self.set_cell(index + 1, 3, service['service_price'])
+
+            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_service, service["id"]))
+            self.set_button_cell(index + 1, 4, button)
+
+    def delete_service(self, client_id: int):
+        AdditionalServiceType.delete(client_id)
+        self.redraw()
+
+    def update_data(self):
+        self.all_services_data = AdditionalServiceSerializer.prepare_data_to_print(AdditionalServiceType.all())

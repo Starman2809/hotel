@@ -4,7 +4,8 @@ from typing import List
 from config.settings import DB_PATH
 from db.manager import DatabaseManager
 from db.serializers import (ClientDataSerializer, JobTypeSerializer, DepartmentSerializer, WorkScheduleSerializer,
-                            EmployeeSerializer, BaseSerializer, HotelRoomSerializer, RoomTypeSerializer)
+                            EmployeeSerializer, BaseSerializer, HotelRoomSerializer, RoomTypeSerializer,
+                            AdditionalServiceSerializer)
 
 
 class DBObject(ABC):
@@ -65,7 +66,7 @@ class Client(DBObject):
         cls.database_manager.close()
 
     @classmethod
-    def get_client(cls, client_id: int):
+    def get(cls, client_id: int):
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
@@ -81,7 +82,7 @@ class Client(DBObject):
         return row
 
     @classmethod
-    def update_client(cls, client_id: int, serialized_client: ClientDataSerializer):
+    def update(cls, client_id: int, serialized_client: ClientDataSerializer):
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
@@ -107,7 +108,7 @@ class Client(DBObject):
         cls.database_manager.close()
 
     @classmethod
-    def delete_client(cls, client_id: int):
+    def delete(cls, client_id: int):
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
@@ -428,6 +429,7 @@ class HotelRoom(DBObject):
         cursor.close()
         cls.database_manager.close()
 
+
 class RoomType(DBObject):
     @classmethod
     def all(cls):
@@ -448,5 +450,86 @@ class RoomType(DBObject):
         return RoomTypeSerializer.get_all_as_dict(cls.all())
 
 
-class AdditionalService:
-    pass
+class AdditionalServiceType(DBObject):
+    @classmethod
+    def create(cls, serialized_hotel_room: AdditionalServiceSerializer):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """INSERT INTO [Типы дополнительных услуг] ([Название], [Описание], [Стоимость]) VALUES (?,?,?)"""
+        values = (
+            serialized_hotel_room.service_name,
+            serialized_hotel_room.service_description,
+            serialized_hotel_room.service_price
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def all(cls):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM [Типы дополнительных услуг] ORDER BY id ASC")
+
+        rows = cursor.fetchall()
+
+        cls.database_manager.close()
+
+        return rows
+
+    @classmethod
+    def delete(cls, service_id: int):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """DELETE FROM [Типы дополнительных услуг] WHERE id = ?"""
+        cursor.execute(query_string, (service_id,))
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def get(cls, service_id: int):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """SELECT * FROM [Типы дополнительных услуг] WHERE id = ?"""
+        cursor.execute(query_string, (service_id,))
+
+        row = cursor.fetchone()
+
+        cursor.close()
+        cls.database_manager.close()
+
+        return row
+
+    @classmethod
+    def update(cls, service_id: int, serialized_service: AdditionalServiceSerializer):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        query_string = f"""UPDATE [Типы дополнительных услуг] SET [Название] = ?,  [Описание] = ?, [Стоимость] = ? WHERE id = ?"""
+
+        values = (
+            serialized_service.service_name,
+            serialized_service.service_description,
+            serialized_service.service_price,
+            service_id,
+        )
+        cursor.execute(query_string, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()

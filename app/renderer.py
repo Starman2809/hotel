@@ -5,10 +5,10 @@ from typing import Dict
 
 from tkcalendar import Calendar
 
-from hotel.models import Client, JobType, Department, WorkSchedule, Employee, RoomType, HotelRoom
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer
-from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable
-from hotel.controller import EmployeeController, ClientController, HotelRoomController
+from hotel.models import Client, JobType, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
+from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer
+from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable
+from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController
 
 
 class ClientRenderer:
@@ -120,7 +120,7 @@ class ClientRenderer:
 
     def __update_new_client_input_grid(self, root, client_id: int):
 
-        client = ClientDataSerializer.prepare_data_to_print([Client.get_client(client_id)])[0]
+        client = ClientDataSerializer.prepare_data_to_print([Client.get(client_id)])[0]
         items_to_draw = {
             "first_name_entry": "Фамилия:",
             "last_name_entry": "Имя:",
@@ -350,7 +350,7 @@ class HotelRoomRenderer:
             # Отрисовка списка
             self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
 
-    def draw_read_all_hotel_rooms_window(self):
+    def draw_list_and_deactivate_hotel_rooms_window(self):
         self.controller.root = tkinter.Tk()
         root = self.controller.root
         root.title("Список номеров")
@@ -407,4 +407,93 @@ class HotelRoomRenderer:
                 self.controller.entries[field_name]['values'] = list(self.controller.entries["room_type_list"].values())
 
             # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+
+class AdditionalServiceRenderer:
+    def __init__(self):
+        self.controller = AdditionalServiceController()
+
+    def draw_create_new_service_window(self):
+        root = tkinter.Tk()
+        root.title("Создание новой услуги")
+        root.geometry("800x600")
+
+        self.__create_new_service_input_grid(root)
+
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=self.controller.submit_create
+        )
+        submit_button.grid(row=3, columnspan=7, padx=5, pady=5)
+
+        root.mainloop()
+
+    def __create_new_service_input_grid(self, root):
+        items_to_draw = {
+            "service_name_entry": "Название:",
+            "service_description_entry": "Описание:",
+            "service_price_entry": "Стоимость:",
+        }
+        self.draw_create_service_form(root, items_to_draw)
+
+    def draw_create_service_form(self, root: tkinter.Tk, items_to_draw: Dict):
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            self.controller.entries[field_name] = tkinter.Entry(root)
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def draw_list_and_delete_service_window(self):
+        self.controller.root = tkinter.Tk()
+        root = self.controller.root
+        root.title("Список дополнительных услуг")
+        root.geometry("1800x800")
+
+        self.__display_all_services_grid(root)
+
+        root.mainloop()
+
+    def __display_all_services_grid(self, root):
+        all_hotel_rooms_table = AdditionalServiceTable(root, columns=5, cell_width=265, cell_height=85)
+        all_hotel_rooms_table.draw_all()
+
+    def draw_update_service_window(self, service_id):
+        root = tkinter.Tk()
+        root.title("Редактирование услуги")
+        root.geometry("800x600")
+
+        self.__update_service_input_grid(root, service_id)
+
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=partial(self.controller.submit_update, service_id)
+        )
+        submit_button.grid(row=3, columnspan=7, padx=5, pady=5)
+
+        root.mainloop()
+
+    def __update_service_input_grid(self, root, service_id: int):
+
+        service = AdditionalServiceSerializer.prepare_data_to_print([AdditionalServiceType.get(service_id)])[0]
+        items_to_draw = {
+            "service_name_entry": "Название:",
+            "service_description_entry": "Описание:",
+            "service_price_entry": "Стоимость:",
+        }
+        self.draw_update_service_form(root, items_to_draw, service)
+
+    def draw_update_service_form(self, root, items_to_draw: Dict, service):
+
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+
+            if "service_name_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, service["service_name"])
+            elif "service_description_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, service["service_description"])
+            elif "service_price_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, service["service_price"])
+
             self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
