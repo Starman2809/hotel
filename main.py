@@ -1,5 +1,5 @@
 from hotel.models import Employee
-from hotel.view import ClientView, EmployeeView, HotelRoomView, AdditionalServiceView
+from hotel.view import ClientView, EmployeeView, HotelRoomView, AdditionalServiceView, JobPositionView
 
 
 def main():
@@ -12,7 +12,7 @@ def main():
     # employee_view = EmployeeView()
     # employee_view.create_new_employee_window()
     # employee_view.read_and_delete_all_employees_window()
-    # employee_id = 6
+    # employee_id = 9
     # employee_view.update_employee_window(employee_id)
 
 
@@ -22,13 +22,18 @@ def main():
     # hotel_room_id = 1
     # hotel_room_view.update_hotel_room_window(hotel_room_id)
 
-    # hotel_controller.book_a_room_window()
 
-    additional_service_view = AdditionalServiceView()
+    # additional_service_view = AdditionalServiceView()
     # additional_service_view.create_new_service_window()
-    additional_service_view.read_and_delete_service_window()
+    # additional_service_view.read_and_delete_service_window()
     # service_id = 2
     # additional_service_view.update_service_window(service_id)
+
+    # job_position_view = JobPositionView()
+    # job_position_view.create_new_view_window()
+    # job_position_view.read_and_delete_view_window()
+    # job_position_id = 6
+    # job_position_view.update_view_window(job_position_id)
 
 
     # hotel_controller = HotelController()

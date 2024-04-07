@@ -3,13 +3,83 @@ from typing import List
 
 from config.settings import DB_PATH
 from db.manager import DatabaseManager
-from db.serializers import (ClientDataSerializer, JobTypeSerializer, DepartmentSerializer, WorkScheduleSerializer,
-                            EmployeeSerializer, BaseSerializer, HotelRoomSerializer, RoomTypeSerializer,
+from db.serializers import (ClientDataSerializer, JobPositionSerializer, DepartmentSerializer, WorkScheduleSerializer,
+                            EmployeeSerializer, Serializer, HotelRoomSerializer, RoomTypeSerializer,
                             AdditionalServiceSerializer)
 
 
 class DBObject(ABC):
     database_manager = DatabaseManager(DB_PATH)
+
+    query_string_create = ""
+    query_string_list = ""
+    query_string_get = ""
+    query_string_update = ""
+    query_string_delete = ""
+
+    @classmethod
+    def create(cls, serialized_object: Serializer):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        values = serialized_object.get_values_in_order()
+
+        cursor.execute(cls.query_string_create, values)
+
+        connection.commit()
+
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def all(cls):
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute(cls.query_string_list)
+
+        rows = cursor.fetchall()
+
+        cursor.close()
+        cls.database_manager.close()
+
+        return rows
+
+    @classmethod
+    def get(cls, object_id: int):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute(cls.query_string_get, (object_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        cls.database_manager.close()
+
+        return row
+
+    @classmethod
+    def update(cls, object_id: int, serialized_object: Serializer):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        values = serialized_object.get_values_in_order(object_id)
+        cursor.execute(cls.query_string_update, values)
+        connection.commit()
+        cursor.close()
+        cls.database_manager.close()
+
+    @classmethod
+    def delete(cls, object_id: int):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute(cls.query_string_delete, (object_id,))
+        connection.commit()
+        cursor.close()
+        cls.database_manager.close()
 
     # @classmethod
     # @abstractmethod
@@ -138,7 +208,7 @@ class Employee(DBObject):
     passport_number = None
     email = None
     phone = None
-    job_type = None
+    job_position = None
     hiring_date = None
     salary = None
     department = None
@@ -159,7 +229,7 @@ class Employee(DBObject):
             serialized_client.patronymic,
             serialized_client.birthday_date,
             serialized_client.passport_number,
-            serialized_client.job_type,
+            serialized_client.job_position,
             serialized_client.email,
             serialized_client.phone_number,
             serialized_client.hiring_date,
@@ -181,7 +251,7 @@ class Employee(DBObject):
 
         connection = cls.database_manager.connection
         cursor = connection.cursor()
-        cursor.execute("SELECT [Персонал].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Персонал].[Дата рождения], [Персонал].[Номер Паспорта], [Должности].[Описание], [Персонал].[Электронная почта], [Персонал].[Номер Телефона], [Персонал].[Дата найма], [Персонал].[Зарплата], [Отделы].[Описание], [График работы].[Описание], [Персонал].[Статус] FROM (([Персонал] LEFT JOIN [Отделы] ON ([Персонал].[Отдел] = [Отделы].[id])) LEFT JOIN [Должности] ON ([Персонал].[Должность] = [Должности].[id])) LEFT JOIN [График работы] ON ([Персонал].[График работы] = [График работы].[id]) ORDER BY [Персонал].[id] ASC")
+        cursor.execute("SELECT [Персонал].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Персонал].[Дата рождения], [Персонал].[Номер Паспорта], [Должности].[Название], [Персонал].[Электронная почта], [Персонал].[Номер Телефона], [Персонал].[Дата найма], [Персонал].[Зарплата], [Отделы].[Название], [График работы].[Описание], [Персонал].[Статус] FROM (([Персонал] LEFT JOIN [Отделы] ON ([Персонал].[Отдел] = [Отделы].[id])) LEFT JOIN [Должности] ON ([Персонал].[Должность] = [Должности].[id])) LEFT JOIN [График работы] ON ([Персонал].[График работы] = [График работы].[id]) ORDER BY [Персонал].[id] ASC")
         rows = cursor.fetchall()
 
         cursor.close()
@@ -224,7 +294,7 @@ class Employee(DBObject):
             serialized_employee.patronymic,
             serialized_employee.birthday_date,
             serialized_employee.passport_number,
-            serialized_employee.job_type,
+            serialized_employee.job_position,
             serialized_employee.email,
             serialized_employee.phone_number,
             serialized_employee.hiring_date,
@@ -255,25 +325,27 @@ class Employee(DBObject):
         cls.database_manager.close()
 
 
-class JobType(DBObject):
+class JobPosition(DBObject):
     id = None
-    description = None
+    title = None
 
+    query_string_create = """INSERT INTO [Должности] ([Название]) VALUES (?)"""
+    query_string_list = """SELECT * FROM [Должности] ORDER BY [Название] ASC"""
+    query_string_get = """SELECT * FROM [Должности] WHERE id = ?"""
+    query_string_delete = """DELETE FROM [Должности] WHERE id = ?"""
+    query_string_update = """UPDATE [Должности] SET [Название] = ? WHERE id = ?"""
 
     @classmethod
     def all_as_dict(cls):
         cls.database_manager.connect()
-
         connection = cls.database_manager.connection
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Должности ORDER BY id ASC")
-
+        cursor.execute("SELECT * FROM [Должности] ORDER BY id ASC")
         rows = cursor.fetchall()
-
         cursor.close()
         cls.database_manager.close()
 
-        return JobTypeSerializer.get_all_as_dict(rows)
+        return JobPositionSerializer.get_all_as_dict(rows)
 
 
 class Department(DBObject):
@@ -329,7 +401,7 @@ class HotelRoom(DBObject):
 
         connection = cls.database_manager.connection
         cursor = connection.cursor()
-        cursor.execute("SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Имя], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC")
+        cursor.execute("SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC")
 
         rows = cursor.fetchall()
 

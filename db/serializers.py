@@ -3,11 +3,17 @@ from typing import List, Dict
 from utils.utils import insert_new_lines, convert_number_to_status
 
 
-class BaseSerializer:
-    pass
+class Serializer:
+    def get_values_in_order(self, object_id=None) -> tuple:
+        """
+
+        :param object_id: Needed for update object by id in database
+        :return: tuple of object's data
+        """
+        pass
 
 
-class ClientDataSerializer(BaseSerializer):
+class ClientDataSerializer(Serializer):
     def __init__(
             self,
             first_name_text: str,
@@ -66,7 +72,7 @@ class ClientDataSerializer(BaseSerializer):
         return result
 
 
-class EmployeeSerializer(BaseSerializer):
+class EmployeeSerializer(Serializer):
 
     def __init__(
             self,
@@ -77,7 +83,7 @@ class EmployeeSerializer(BaseSerializer):
             passport_number_text: str,
             email_text: str,
             phone_number_text: str,
-            job_type_text: str,
+            job_position_text: str,
             hiring_date_text: str,
             salary_text: str,
             department_text: str,
@@ -95,7 +101,7 @@ class EmployeeSerializer(BaseSerializer):
         :param passport_number_text:
         :param email_text:
         :param phone_number_text:
-        :param job_type_text:
+        :param job_position_text:
         :param hiring_date_text:
         :param salary_text:
         :param department_text:
@@ -112,7 +118,7 @@ class EmployeeSerializer(BaseSerializer):
         self.passport_number = passport_number_text
         self.email = email_text
         self.phone_number = phone_number_text
-        self.job_type = job_type_text
+        self.job_position = job_position_text
         self.hiring_date = hiring_date_text
         self.salary = float(salary_text)
         self.department = department_text
@@ -131,7 +137,7 @@ class EmployeeSerializer(BaseSerializer):
                 "patronymic": row[3],
                 "birthday_date": row[4],
                 "passport_number": row[5],
-                "job_type": row[6],
+                "job_position": row[6],
                 "email": row[7],
                 "phone_number": row[8],
                 "hiring_date": row[9],
@@ -153,7 +159,37 @@ class EmployeeSerializer(BaseSerializer):
         return result
 
 
-class JobTypeSerializer(BaseSerializer):
+class JobPositionSerializer(Serializer):
+    def __init__(self, job_title):
+        self.job_title = job_title
+
+    @classmethod
+    def get_all_as_dict(cls, rows) -> Dict:
+        result = {}
+        for row in rows:
+            result[row[0]] = row[1]
+
+        return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id:
+            return tuple([self.job_title, object_id])
+        return tuple([self.job_title])
+
+    @staticmethod
+    def prepare_data_to_print(job_position_rows):
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in job_position_rows:
+            job_position_info_dict = {
+                "id": row[0],
+                "job_title": row[1],
+            }
+            result.append(job_position_info_dict)
+        return result
+
+
+class DepartmentSerializer(Serializer):
 
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
@@ -164,7 +200,7 @@ class JobTypeSerializer(BaseSerializer):
         return result
 
 
-class DepartmentSerializer(BaseSerializer):
+class WorkScheduleSerializer(Serializer):
 
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
@@ -175,18 +211,7 @@ class DepartmentSerializer(BaseSerializer):
         return result
 
 
-class WorkScheduleSerializer(BaseSerializer):
-
-    @classmethod
-    def get_all_as_dict(cls, rows) -> Dict:
-        result = {}
-        for row in rows:
-            result[row[0]] = row[1]
-
-        return result
-
-
-class HotelRoomSerializer(BaseSerializer):
+class HotelRoomSerializer(Serializer):
     def __init__(
         self,
         employee_id: int,
@@ -213,7 +238,7 @@ class HotelRoomSerializer(BaseSerializer):
         return result
 
 
-class RoomTypeSerializer(BaseSerializer):
+class RoomTypeSerializer(Serializer):
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
         result = {}
@@ -223,7 +248,7 @@ class RoomTypeSerializer(BaseSerializer):
         return result
 
 
-class AdditionalServiceSerializer(BaseSerializer):
+class AdditionalServiceSerializer(Serializer):
     def __init__(self, service_name, service_description, service_price):
         self.service_name = service_name
         self.service_description = service_description

@@ -1,14 +1,86 @@
 import tkinter
+from abc import abstractmethod
 from functools import partial
 from tkinter import ttk
 from typing import Dict
 
 from tkcalendar import Calendar
 
-from hotel.models import Client, JobType, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
-from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer
-from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable
-from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController
+from hotel.models import Client, JobPosition, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
+from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer, JobPositionSerializer
+from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable
+from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController, \
+    Controller, JobPositionController
+
+
+class Renderer:
+    create_window_title = "empty title"
+    create_window_size = "800x600"
+    submit_create_button_position_row = 3
+
+    list_all_window_title = ""
+    list_all_window_size = "1800x600"
+
+    update_window_title = ""
+    update_window_size = "800x600"
+    submit_update_button_position_row = 3
+
+    def __init__(self):
+        self.controller = self.set_controller()
+
+    @abstractmethod
+    def set_controller(self):
+        """
+        Method for set controller for all children
+        :return:
+        """
+        pass
+
+    def draw_window_create(self):
+        root = tkinter.Tk()
+        root.title(f"{self.create_window_title}")
+        root.geometry(f"{self.create_window_size}")
+
+        self.create_new_object_input_grid(root)
+
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=self.controller.submit_create
+        )
+        submit_button.grid(row=self.submit_create_button_position_row, columnspan=7, padx=5, pady=5)
+
+        root.mainloop()
+
+    @abstractmethod
+    def create_new_object_input_grid(self, root: tkinter.Tk):
+        pass
+
+    @abstractmethod
+    def draw_window_read_delete(self):
+        self.controller.root = tkinter.Tk()
+        root = self.controller.root
+        root.title(self.list_all_window_title)
+        root.geometry(self.list_all_window_size)
+        self.list_all_objects_grid(root)
+        root.mainloop()
+
+    @abstractmethod
+    def list_all_objects_grid(self, root: tkinter.Tk):
+        pass
+
+    def draw_window_update(self, object_id: int):
+        root = tkinter.Tk()
+        root.title(self.update_window_title)
+        root.geometry(self.update_window_size)
+        self.update_object_input_grid(root, object_id)
+        submit_button = tkinter.Button(
+            root, text="Отправить", command=partial(self.controller.submit_update, object_id)
+        )
+        submit_button.grid(row=self.submit_update_button_position_row, columnspan=7, padx=5, pady=5)
+        root.mainloop()
+
+    @abstractmethod
+    def update_object_input_grid(self, root: tkinter.Tk, object_id: int):
+        pass
 
 
 class ClientRenderer:
@@ -28,20 +100,6 @@ class ClientRenderer:
         submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
 
         root.mainloop()
-
-    # def book_room(self):
-    #     root = tkinter.Tk()
-    #     root.title("Бронирование комнаты")
-    #     root.geometry("800x600")
-    #
-    #     self.__book_a_room_input_grid(root)
-    #
-    #     submit_button = tkinter.Button(
-    #         root, text="Отправить", command=self.handler.book_room_for_client
-    #     )
-    #     submit_button.grid(row=7, columnspan=7, padx=5, pady=5)
-    #
-    #     root.mainloop()
 
     def read_all_clients_window(self):
         self.controller.root = tkinter.Tk()
@@ -164,7 +222,7 @@ class EmployeeRenderer:
             "passport_number_entry": "Номер паспорта:",
             "email_entry": "Электронная почта:",
             "phone_number_entry": "Номер телефона:",
-            "job_type_combobox": "Должность:",
+            "job_position_combobox": "Должность:",
             "hiring_date_calendar": "Дата найма:",
             "salary_entry": "Зарплата:",
             "department_combobox": "Отдел:",
@@ -184,7 +242,7 @@ class EmployeeRenderer:
             "passport_number_entry": "Номер паспорта:",
             "email_entry": "Электронная почта:",
             "phone_number_entry": "Номер телефона:",
-            "job_type_combobox": "Должность:",
+            "job_position_combobox": "Должность:",
             "hiring_date_calendar": "Дата найма:",
             "salary_entry": "Зарплата:",
             "department_combobox": "Отдел:",
@@ -195,7 +253,7 @@ class EmployeeRenderer:
 
     def draw_create_employee_form(self, root: tkinter.Tk, items_to_draw: Dict):
 
-        self.controller.entries["job_type_list"] = JobType.all_as_dict()
+        self.controller.entries["job_position_list"] = JobPosition.all_as_dict()
         self.controller.entries["department_list"] = Department.all_as_dict()
         self.controller.entries["work_schedule_list"] = WorkSchedule.all_as_dict()
 
@@ -204,10 +262,10 @@ class EmployeeRenderer:
 
             if "calendar" in field_name:
                 self.controller.entries[field_name] = Calendar(root, selectmode="day", date_pattern="dd.MM.yyyy")
-            elif "job_type_combobox" in field_name:
-                self.controller.entries["job_type_combobox_selected_text"] = tkinter.StringVar()
-                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["job_type_combobox_selected_text"])
-                self.controller.entries[field_name]['values'] = list(self.controller.entries["job_type_list"].values())
+            elif "job_position_combobox" in field_name:
+                self.controller.entries["job_position_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["job_position_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["job_position_list"].values())
             elif "department_combobox" in field_name:
                 self.controller.entries["department_type_combobox_selected_text"] = tkinter.StringVar()
                 self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["department_type_combobox_selected_text"])
@@ -225,7 +283,7 @@ class EmployeeRenderer:
 
     def draw_update_employee_form(self, root: tkinter.Tk, items_to_draw: Dict, employee: Dict):
 
-        self.controller.entries["job_type_list"] = JobType.all_as_dict()
+        self.controller.entries["job_position_list"] = JobPosition.all_as_dict()
         self.controller.entries["department_list"] = Department.all_as_dict()
         self.controller.entries["work_schedule_list"] = WorkSchedule.all_as_dict()
 
@@ -246,10 +304,10 @@ class EmployeeRenderer:
             elif "passport_number_entry" in field_name:
                 self.controller.entries[field_name] = tkinter.Entry(root)
                 self.controller.entries[field_name].insert(0, employee["passport_number"])
-            elif "job_type_combobox" in field_name:
-                self.controller.entries["job_type_combobox_selected_text"] = tkinter.StringVar()
-                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["job_type_combobox_selected_text"])
-                self.controller.entries[field_name]['values'] = list(self.controller.entries["job_type_list"].values())
+            elif "job_position_combobox" in field_name:
+                self.controller.entries["job_position_combobox_selected_text"] = tkinter.StringVar()
+                self.controller.entries[field_name] = ttk.Combobox(root, textvariable=self.controller.entries["job_position_combobox_selected_text"])
+                self.controller.entries[field_name]['values'] = list(self.controller.entries["job_position_list"].values())
             elif "email_entry" in field_name:
                 self.controller.entries[field_name] = tkinter.Entry(root)
                 self.controller.entries[field_name].insert(0, employee["email"])
@@ -496,4 +554,53 @@ class AdditionalServiceRenderer:
                 self.controller.entries[field_name] = tkinter.Entry(root)
                 self.controller.entries[field_name].insert(0, service["service_price"])
 
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+
+class JobPositionRenderer(Renderer):
+    create_window_title = "Создание новой должности"
+    create_window_size = "800x600"
+    submit_create_button_position_row = 3
+
+    list_all_window_title = "Список всех должностей"
+    list_all_window_size = "1800x600"
+
+    update_window_title = "Редактирование должности"
+    update_window_size = "800x600"
+    submit_update_button_position_row = 3
+
+    def set_controller(self):
+        return JobPositionController()
+
+    def create_new_object_input_grid(self, root: tkinter.Tk):
+        items_to_draw = {
+            "job_title_entry": "Название:",
+        }
+        self.draw_create_object_form(root, items_to_draw)
+
+    def draw_create_object_form(self, root: tkinter.Tk, items_to_draw: Dict):
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            self.controller.entries[field_name] = tkinter.Entry(root)
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def list_all_objects_grid(self, root: tkinter.Tk):
+        all_clients_table = JobPositionTable(root, columns=3, cell_width=200, cell_height=30)
+        all_clients_table.draw_all()
+
+    def update_object_input_grid(self, root: tkinter.Tk, job_position_id: int):
+        job_positions = JobPositionSerializer.prepare_data_to_print([JobPosition.get(job_position_id)])[0]
+        items_to_draw = {
+            "job_title_entry": "Название:",
+        }
+        self.draw_update_job_position_form(root, items_to_draw, job_positions)
+
+    def draw_update_job_position_form(self, root, items_to_draw: Dict, job_positions):
+
+        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            if "job_title_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, job_positions["job_title"])
             self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)

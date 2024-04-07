@@ -3,8 +3,9 @@ from abc import abstractmethod
 from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
+    JobPositionSerializer
 
 
 class Table(tkinter.Canvas):
@@ -133,7 +134,7 @@ class EmployeesTable(Table):
             self.set_cell(index + 1, 3, employee['patronymic'])
             self.set_cell(index + 1, 4, employee['birthday_date'])
             self.set_cell(index + 1, 5, employee['passport_number'])
-            self.set_cell(index + 1, 6, employee['job_type'])
+            self.set_cell(index + 1, 6, employee['job_position'])
             self.set_cell(index + 1, 7, employee['email'])
             self.set_cell(index + 1, 8, employee['phone_number'])
             self.set_cell(index + 1, 9, employee['hiring_date'])
@@ -226,3 +227,32 @@ class AdditionalServiceTable(Table):
 
     def update_data(self):
         self.all_services_data = AdditionalServiceSerializer.prepare_data_to_print(AdditionalServiceType.all())
+
+
+class JobPositionTable(Table):
+    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_job_positions_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
+        self.rows = len(self.all_job_positions_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def update_data(self):
+        self.all_job_positions_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "Название")
+        self.set_cell(0, 2, "")
+
+        for index, job_position in enumerate(self.all_job_positions_data):
+            self.set_cell(index + 1, 0, job_position['id'])
+            self.set_cell(index + 1, 1, job_position['job_title'])
+
+            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_job_position, job_position["id"]))
+            self.set_button_cell(index + 1, 2, button)
+
+    def delete_job_position(self, job_position_id: int):
+        JobPosition.delete(job_position_id)
+        self.redraw()
