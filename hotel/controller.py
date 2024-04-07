@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType
+from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
+    JobPositionSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition
 from utils.utils import get_key_from_dict_by_value
 
 
-class BaseController(ABC):
+class Controller(ABC):
     def __init__(self):
         self.entries = {}
         self.root = None
@@ -25,7 +26,7 @@ class BaseController(ABC):
         pass
 
 
-class ClientController(BaseController):
+class ClientController(Controller):
     def submit_create(self):
         first_name_text = self.entries["first_name_entry"].get()
         last_name_text = self.entries["last_name_entry"].get()
@@ -73,10 +74,10 @@ class ClientController(BaseController):
         self.cleanup()
 
 
-class EmployeeController(BaseController):
+class EmployeeController(Controller):
     def submit_create(self):
 
-        job_type_id = get_key_from_dict_by_value(self.entries["job_type_list"], self.entries["job_type_combobox_selected_text"].get())
+        job_position_id = get_key_from_dict_by_value(self.entries["job_position_list"], self.entries["job_position_combobox_selected_text"].get())
         department_type_id = get_key_from_dict_by_value(self.entries["department_list"], self.entries["department_type_combobox_selected_text"].get())
         work_schedule_type_id = get_key_from_dict_by_value(self.entries["work_schedule_list"], self.entries["work_schedule_combobox_selected_text"].get())
 
@@ -87,7 +88,7 @@ class EmployeeController(BaseController):
         passport_number_text = self.entries["passport_number_entry"].get()
         email_text = self.entries["email_entry"].get()
         phone_number_text = self.entries["phone_number_entry"].get()
-        job_type_text = job_type_id
+        job_position_text = job_position_id
         hiring_date_text = self.entries["hiring_date_calendar"].selection_get()
         salary_text = self.entries["salary_entry"].get()
         department_text = department_type_id
@@ -102,7 +103,7 @@ class EmployeeController(BaseController):
             passport_number_text=passport_number_text,
             email_text=email_text,
             phone_number_text=phone_number_text,
-            job_type_text=job_type_text,
+            job_position_text=job_position_text,
             hiring_date_text=hiring_date_text,
             salary_text=salary_text,
             department_text=department_text,
@@ -115,7 +116,7 @@ class EmployeeController(BaseController):
         self.cleanup()
 
     def submit_update(self, employee_id):
-        job_type_id = get_key_from_dict_by_value(self.entries["job_type_list"], self.entries["job_type_combobox_selected_text"].get())
+        job_position_id = get_key_from_dict_by_value(self.entries["job_position_list"], self.entries["job_position_combobox_selected_text"].get())
         department_type_id = get_key_from_dict_by_value(self.entries["department_list"], self.entries["department_type_combobox_selected_text"].get())
         work_schedule_type_id = get_key_from_dict_by_value(self.entries["work_schedule_list"], self.entries["work_schedule_combobox_selected_text"].get())
 
@@ -126,7 +127,7 @@ class EmployeeController(BaseController):
         passport_number_text = self.entries["passport_number_entry"].get()
         email_text = self.entries["email_entry"].get()
         phone_number_text = self.entries["phone_number_entry"].get()
-        job_type_text = job_type_id
+        job_position_text = job_position_id
         hiring_date_text = self.entries["hiring_date_calendar"].selection_get()
         salary_text = self.entries["salary_entry"].get()
         department_text = department_type_id
@@ -141,7 +142,7 @@ class EmployeeController(BaseController):
             passport_number_text=passport_number_text,
             email_text=email_text,
             phone_number_text=phone_number_text,
-            job_type_text=job_type_text,
+            job_position_text=job_position_text,
             hiring_date_text=hiring_date_text,
             salary_text=salary_text,
             department_text=department_text,
@@ -154,7 +155,7 @@ class EmployeeController(BaseController):
         self.cleanup()
 
 
-class HotelRoomController(BaseController):
+class HotelRoomController(Controller):
     def submit_create(self):
         employee_id = get_key_from_dict_by_value(self.entries["employee_list"], self.entries["employee_combobox_selected_text"].get())
         room_type_id = get_key_from_dict_by_value(self.entries["room_type_list"], self.entries["room_type_combobox_selected_text"].get())
@@ -171,7 +172,7 @@ class HotelRoomController(BaseController):
         self.cleanup()
 
 
-class AdditionalServiceController(BaseController):
+class AdditionalServiceController(Controller):
     def submit_create(self):
         service_name = self.entries["service_name_entry"].get()
         service_description = self.entries["service_description_entry"].get()
@@ -187,3 +188,15 @@ class AdditionalServiceController(BaseController):
 
         serialized_service = AdditionalServiceSerializer(service_name=service_name, service_description=service_description, service_price=service_price)
         AdditionalServiceType.update(object_id, serialized_service)
+
+
+class JobPositionController(Controller):
+    def submit_create(self):
+        job_title = self.entries["job_title_entry"].get()
+        serialized_job_position = JobPositionSerializer(job_title=job_title)
+        JobPosition.create(serialized_job_position)
+
+    def submit_update(self, object_id):
+        job_title = self.entries["job_title_entry"].get()
+        serialized_job_position = JobPositionSerializer(job_title=job_title)
+        JobPosition.update(object_id, serialized_job_position)
