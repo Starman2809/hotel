@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
-    JobPositionSerializer
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition
+    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType
 from utils.utils import get_key_from_dict_by_value
 
 
@@ -200,3 +200,33 @@ class JobPositionController(Controller):
         job_title = self.entries["job_title_entry"].get()
         serialized_job_position = JobPositionSerializer(job_title=job_title)
         JobPosition.update(object_id, serialized_job_position)
+
+
+class DepartmentController(Controller):
+    def submit_create(self):
+        department_title = self.entries["department_title_entry"].get()
+        serialized_department = DepartmentSerializer(department_title=department_title)
+        Department.create(serialized_department)
+
+    def submit_update(self, object_id):
+        department_title = self.entries["department_title_entry"].get()
+        serialized_department = DepartmentSerializer(department_title=department_title)
+        Department.update(object_id, serialized_department)
+
+
+class RoomTypeController(Controller):
+    def submit_create(self):
+        hotel_room_type_title = self.entries["room_type_title_entry"].get()
+        hotel_room_type_description = self.entries["room_type_description_entry"].get()
+        hotel_room_type_price = self.entries["room_type_price_entry"].get()
+
+        serialized_room_type = RoomTypeSerializer(title=hotel_room_type_title, description=hotel_room_type_description, price=hotel_room_type_price)
+        RoomType.create(serialized_room_type)
+
+    def submit_update(self, object_id):
+        hotel_room_type_title = self.entries["room_type_title_entry"].get()
+        hotel_room_type_description = self.entries["room_type_description_entry"].get()
+        hotel_room_type_price = self.entries["room_type_price_entry"].get()
+
+        serialized_room_type = RoomTypeSerializer(title=hotel_room_type_title, description=hotel_room_type_description, price=hotel_room_type_price)
+        RoomType.update(object_id, serialized_room_type)

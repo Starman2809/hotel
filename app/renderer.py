@@ -7,10 +7,12 @@ from typing import Dict
 from tkcalendar import Calendar
 
 from hotel.models import Client, JobPosition, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
-from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer, JobPositionSerializer
-from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable
+from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer, JobPositionSerializer, \
+    DepartmentSerializer, RoomTypeSerializer
+from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable, \
+    DepartmentTable, RoomTypeTable
 from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController, \
-    Controller, JobPositionController
+    Controller, JobPositionController, DepartmentController, RoomTypeController
 
 
 class Renderer:
@@ -24,6 +26,10 @@ class Renderer:
     update_window_title = ""
     update_window_size = "800x600"
     submit_update_button_position_row = 3
+
+    form_items_to_draw = {
+        "department_title_entry": "Название:",
+    }
 
     def __init__(self):
         self.controller = self.set_controller()
@@ -41,7 +47,7 @@ class Renderer:
         root.title(f"{self.create_window_title}")
         root.geometry(f"{self.create_window_size}")
 
-        self.create_new_object_input_grid(root)
+        self.draw_create_object_form(root)
 
         submit_button = tkinter.Button(
             root, text="Отправить", command=self.controller.submit_create
@@ -51,10 +57,9 @@ class Renderer:
         root.mainloop()
 
     @abstractmethod
-    def create_new_object_input_grid(self, root: tkinter.Tk):
+    def draw_create_object_form(self, root: tkinter.Tk):
         pass
 
-    @abstractmethod
     def draw_window_read_delete(self):
         self.controller.root = tkinter.Tk()
         root = self.controller.root
@@ -569,17 +574,15 @@ class JobPositionRenderer(Renderer):
     update_window_size = "800x600"
     submit_update_button_position_row = 3
 
+    form_items_to_draw = {
+        "job_title_entry": "Название:",
+    }
+
     def set_controller(self):
         return JobPositionController()
 
-    def create_new_object_input_grid(self, root: tkinter.Tk):
-        items_to_draw = {
-            "job_title_entry": "Название:",
-        }
-        self.draw_create_object_form(root, items_to_draw)
-
-    def draw_create_object_form(self, root: tkinter.Tk, items_to_draw: Dict):
-        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+    def draw_create_object_form(self, root: tkinter.Tk):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
             tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
             self.controller.entries[field_name] = tkinter.Entry(root)
             # Отрисовка списка
@@ -591,16 +594,106 @@ class JobPositionRenderer(Renderer):
 
     def update_object_input_grid(self, root: tkinter.Tk, job_position_id: int):
         job_positions = JobPositionSerializer.prepare_data_to_print([JobPosition.get(job_position_id)])[0]
-        items_to_draw = {
-            "job_title_entry": "Название:",
-        }
-        self.draw_update_job_position_form(root, items_to_draw, job_positions)
+        self.draw_update_job_position_form(root, job_positions)
 
-    def draw_update_job_position_form(self, root, items_to_draw: Dict, job_positions):
-
-        for index, (field_name, label_name) in enumerate(items_to_draw.items()):
+    def draw_update_job_position_form(self, root, job_positions):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
             tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
             if "job_title_entry" in field_name:
                 self.controller.entries[field_name] = tkinter.Entry(root)
                 self.controller.entries[field_name].insert(0, job_positions["job_title"])
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+
+class DepartmentRenderer(Renderer):
+    create_window_title = "Создание нового отдела"
+    create_window_size = "800x600"
+    submit_create_button_position_row = 3
+
+    list_all_window_title = "Список всех отделов"
+    list_all_window_size = "1800x600"
+
+    update_window_title = "Редактирование отдела"
+    update_window_size = "800x600"
+    submit_update_button_position_row = 3
+
+    form_items_to_draw = {
+        "department_title_entry": "Название:",
+    }
+
+    def set_controller(self):
+        return DepartmentController()
+
+    def draw_create_object_form(self, root: tkinter.Tk):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            self.controller.entries[field_name] = tkinter.Entry(root)
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def list_all_objects_grid(self, root: tkinter.Tk):
+        all_departments_table = DepartmentTable(root, columns=3, cell_width=200, cell_height=30)
+        all_departments_table.draw_all()
+
+    def update_object_input_grid(self, root: tkinter.Tk, department_id: int):
+        department = DepartmentSerializer.prepare_data_to_print([Department.get(department_id)])[0]
+        self.draw_update_department_form(root, department)
+
+    def draw_update_department_form(self, root, department):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            if "department_title_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, department["department_title"])
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+
+class RoomTypeRenderer(Renderer):
+    create_window_title = "Создание нового типа номера"
+    create_window_size = "800x600"
+    submit_create_button_position_row = 3
+
+    list_all_window_title = "Список всех типов номеров"
+    list_all_window_size = "1800x600"
+
+    update_window_title = "Редактирование типа номера"
+    update_window_size = "800x600"
+    submit_update_button_position_row = 3
+
+    form_items_to_draw = {
+        "room_type_title_entry": "Название:",
+        "room_type_description_entry": "Описание:",
+        "room_type_price_entry": "Стоимость:",
+    }
+
+    def set_controller(self):
+        return RoomTypeController()
+
+    def draw_create_object_form(self, root: tkinter.Tk):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            self.controller.entries[field_name] = tkinter.Entry(root)
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def list_all_objects_grid(self, root: tkinter.Tk):
+        all_room_types_table = RoomTypeTable(root, columns=5, cell_width=265, cell_height=85)
+        all_room_types_table.draw_all()
+
+    def update_object_input_grid(self, root: tkinter.Tk, room_type_id: int):
+        room_type = RoomTypeSerializer.prepare_data_to_print([RoomType.get(room_type_id)])[0]
+        self.draw_update_room_type_form(root, room_type)
+
+    def draw_update_room_type_form(self, root, room_type):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            if "room_type_title_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, room_type["title"])
+            if "room_type_description_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, room_type["description"])
+            if "room_type_price_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, room_type["price"])
             self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)

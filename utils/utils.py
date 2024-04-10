@@ -5,7 +5,10 @@ def get_key_from_dict_by_value(dict_to_search, search_val):
 
 
 def insert_new_lines(text, line_length):
-    if len(text) <= line_length:
+    if text is None:
+
+        return ""
+    elif len(text) <= line_length:
 
         return text
     else:

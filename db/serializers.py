@@ -190,6 +190,13 @@ class JobPositionSerializer(Serializer):
 
 
 class DepartmentSerializer(Serializer):
+    def __init__(self, department_title):
+        self.department_title = department_title
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id:
+            return tuple([self.department_title, object_id])
+        return tuple([self.department_title])
 
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
@@ -197,6 +204,18 @@ class DepartmentSerializer(Serializer):
         for row in rows:
             result[row[0]] = row[1]
 
+        return result
+
+    @staticmethod
+    def prepare_data_to_print(department_rows):
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in department_rows:
+            department_info_dict = {
+                "id": row[0],
+                "department_title": row[1],
+            }
+            result.append(department_info_dict)
         return result
 
 
@@ -239,6 +258,11 @@ class HotelRoomSerializer(Serializer):
 
 
 class RoomTypeSerializer(Serializer):
+    def __init__(self, title, description, price):
+        self.title = title
+        self.description = description
+        self.price = float(price)
+
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
         result = {}
@@ -246,6 +270,26 @@ class RoomTypeSerializer(Serializer):
             result[row[0]] = row[1]
 
         return result
+
+    @staticmethod
+    def prepare_data_to_print(room_type_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in room_type_rows:
+            room_type_info_dict = {
+                "id": row[0],
+                "title": row[1],
+                "description": insert_new_lines(row[2], 40),
+                "price": row[3],
+            }
+            result.append(room_type_info_dict)
+
+        return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.title, self.description, self.price, object_id])
+        return tuple([self.title, self.description, self.price])
 
 
 class AdditionalServiceSerializer(Serializer):
