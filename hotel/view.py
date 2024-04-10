@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
-    JobPositionRenderer
+    JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer
 
 
 class View:
@@ -90,3 +90,31 @@ class JobPositionView:
 
     def update_view_window(self, job_position_id):
         self.renderer.draw_window_update(job_position_id)
+
+
+class DepartmentView(View):
+    def __init__(self):
+        self.renderer = DepartmentRenderer()
+
+    def create_new_view_window(self):
+        self.renderer.draw_window_create()
+
+    def read_and_delete_view_window(self):
+        self.renderer.draw_window_read_delete()
+
+    def update_view_window(self, department_id):
+        self.renderer.draw_window_update(department_id)
+
+
+class RoomTypeView(View):
+    def __init__(self):
+        self.renderer = RoomTypeRenderer()
+
+    def create_new_view_window(self):
+        self.renderer.draw_window_create()
+
+    def read_and_delete_view_window(self):
+        self.renderer.draw_window_read_delete()
+
+    def update_view_window(self, room_type_id):
+        self.renderer.draw_window_update(room_type_id)

@@ -332,8 +332,9 @@ class JobPosition(DBObject):
     query_string_create = """INSERT INTO [Должности] ([Название]) VALUES (?)"""
     query_string_list = """SELECT * FROM [Должности] ORDER BY [Название] ASC"""
     query_string_get = """SELECT * FROM [Должности] WHERE id = ?"""
-    query_string_delete = """DELETE FROM [Должности] WHERE id = ?"""
     query_string_update = """UPDATE [Должности] SET [Название] = ? WHERE id = ?"""
+    query_string_delete = """DELETE FROM [Должности] WHERE id = ?"""
+
 
     @classmethod
     def all_as_dict(cls):
@@ -351,6 +352,12 @@ class JobPosition(DBObject):
 class Department(DBObject):
     id = None
     description = None
+
+    query_string_create = """INSERT INTO [Отделы] ([Название]) VALUES (?)"""
+    query_string_list = """SELECT * FROM [Отделы] ORDER BY [id] ASC"""
+    query_string_get = """SELECT * FROM [Отделы] WHERE id = ?"""
+    query_string_update = """UPDATE [Отделы] SET [Название] = ? WHERE id = ?"""
+    query_string_delete = """DELETE FROM [Отделы] WHERE id = ?"""
 
     @classmethod
     def all_as_dict(cls):
@@ -395,19 +402,7 @@ class HotelRoom(DBObject):
     # Доступна ли комната для использования или нет впринципе, мб ее закрыли на ремонт и ее нельзя бронировать впринципе
     status = True
 
-    @classmethod
-    def all(cls):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC")
-
-        rows = cursor.fetchall()
-
-        cls.database_manager.close()
-
-        return rows
+    query_string_list = """SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC"""
 
     @classmethod
     def create(cls, serialized_hotel_room: HotelRoomSerializer):
@@ -503,19 +498,17 @@ class HotelRoom(DBObject):
 
 
 class RoomType(DBObject):
-    @classmethod
-    def all(cls):
-        cls.database_manager.connect()
+    id = None
+    title = None
+    description = None
+    price = None
 
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM [Категории номеров] ORDER BY id ASC")
 
-        rows = cursor.fetchall()
-
-        cls.database_manager.close()
-
-        return rows
+    query_string_create = """INSERT INTO [Категории номеров] ([Название], [Описание], [Стоимость]) VALUES (?,?,?)"""
+    query_string_list = """SELECT * FROM [Категории номеров] ORDER BY [id] ASC"""
+    query_string_get = """SELECT * FROM [Категории номеров] WHERE [id] = ?"""
+    query_string_update = """UPDATE [Категории номеров] SET [Название] = ?,  [Описание] = ?, [Стоимость] = ? WHERE [id] = ?"""
+    query_string_delete = """DELETE FROM [Категории номеров] WHERE [id] = ?"""
 
     @classmethod
     def all_as_dict(cls):
@@ -523,6 +516,7 @@ class RoomType(DBObject):
 
 
 class AdditionalServiceType(DBObject):
+
     @classmethod
     def create(cls, serialized_hotel_room: AdditionalServiceSerializer):
         cls.database_manager.connect()
@@ -591,7 +585,7 @@ class AdditionalServiceType(DBObject):
         connection = cls.database_manager.connection
         cursor = connection.cursor()
 
-        query_string = f"""UPDATE [Типы дополнительных услуг] SET [Название] = ?,  [Описание] = ?, [Стоимость] = ? WHERE id = ?"""
+        query_string = """UPDATE [Типы дополнительных услуг] SET [Название] = ?,  [Описание] = ?, [Стоимость] = ? WHERE id = ?"""
 
         values = (
             serialized_service.service_name,

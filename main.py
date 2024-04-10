@@ -1,5 +1,6 @@
 from hotel.models import Employee
-from hotel.view import ClientView, EmployeeView, HotelRoomView, AdditionalServiceView, JobPositionView
+from hotel.view import ClientView, EmployeeView, HotelRoomView, AdditionalServiceView, JobPositionView, DepartmentView, \
+    RoomTypeView
 
 
 def main():
@@ -15,13 +16,12 @@ def main():
     # employee_id = 9
     # employee_view.update_employee_window(employee_id)
 
-
     # hotel_room_view = HotelRoomView()
     # hotel_room_view.create_new_room_window()
-    # hotel_room_view.read_and_delete_all_hotel_rooms_window()
+    # TODO: добавить кнопку для удаления
+    # hotel_room_view.list_and_deactivate_all_hotel_rooms_window()
     # hotel_room_id = 1
     # hotel_room_view.update_hotel_room_window(hotel_room_id)
-
 
     # additional_service_view = AdditionalServiceView()
     # additional_service_view.create_new_service_window()
@@ -35,6 +35,17 @@ def main():
     # job_position_id = 6
     # job_position_view.update_view_window(job_position_id)
 
+    # department_view = DepartmentView()
+    # department_view.create_new_view_window()
+    # department_view.read_and_delete_view_window()
+    # department_view_id = 1
+    # department_view.update_view_window(department_view_id)
+
+    room_type = RoomTypeView()
+    # room_type.create_new_view_window()
+    room_type.read_and_delete_view_window()
+    # room_type_id = 0
+    # room_type.update_view_window(room_type_id)
 
     # hotel_controller = HotelController()
     # hotel_controller.create_new_client_window()

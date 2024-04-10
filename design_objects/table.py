@@ -3,9 +3,9 @@ from abc import abstractmethod
 from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType
 from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
-    JobPositionSerializer
+    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer
 
 
 class Table(tkinter.Canvas):
@@ -255,4 +255,66 @@ class JobPositionTable(Table):
 
     def delete_job_position(self, job_position_id: int):
         JobPosition.delete(job_position_id)
+        self.redraw()
+
+
+class DepartmentTable(Table):
+    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_departments_data = DepartmentSerializer.prepare_data_to_print(Department.all())
+        self.rows = len(self.all_departments_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def update_data(self):
+        self.all_departments_data = DepartmentSerializer.prepare_data_to_print(Department.all())
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "Название")
+        self.set_cell(0, 2, "")
+
+        for index, department in enumerate(self.all_departments_data):
+            self.set_cell(index + 1, 0, department['id'])
+            self.set_cell(index + 1, 1, department['department_title'])
+
+            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_department, department["id"]))
+            self.set_button_cell(index + 1, 2, button)
+
+    def delete_department(self, department_id: int):
+        Department.delete(department_id)
+        self.redraw()
+
+
+class RoomTypeTable(Table):
+    def __init__(self, parent, columns=5, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_room_types_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
+        self.rows = len(self.all_room_types_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def update_data(self):
+        self.all_room_types_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "Название")
+        self.set_cell(0, 2, "Описание")
+        self.set_cell(0, 3, "Стоимость")
+        self.set_cell(0, 4, "")
+
+        for index, room_type in enumerate(self.all_room_types_data):
+            self.set_cell(index + 1, 0, room_type['id'])
+            self.set_cell(index + 1, 1, room_type['title'])
+            self.set_cell(index + 1, 2, room_type['description'])
+            self.set_cell(index + 1, 3, room_type['price'])
+
+            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_room_type, room_type["id"]))
+            self.set_button_cell(index + 1, 4, button)
+
+    def delete_room_type(self, room_type_id: int):
+        RoomType.delete(room_type_id)
         self.redraw()
