@@ -8,11 +8,11 @@ from tkcalendar import Calendar
 
 from hotel.models import Client, JobPosition, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
 from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer, JobPositionSerializer, \
-    DepartmentSerializer, RoomTypeSerializer
+    DepartmentSerializer, RoomTypeSerializer, WorkScheduleSerializer
 from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable, \
-    DepartmentTable, RoomTypeTable
+    DepartmentTable, RoomTypeTable, WorkScheduleTable
 from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController, \
-    Controller, JobPositionController, DepartmentController, RoomTypeController
+    Controller, JobPositionController, DepartmentController, RoomTypeController, WorkScheduleController
 
 
 class Renderer:
@@ -696,4 +696,47 @@ class RoomTypeRenderer(Renderer):
             if "room_type_price_entry" in field_name:
                 self.controller.entries[field_name] = tkinter.Entry(root)
                 self.controller.entries[field_name].insert(0, room_type["price"])
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+
+class WorkScheduleRenderer(Renderer):
+    create_window_title = "Создание нового графика работы"
+    create_window_size = "800x600"
+    submit_create_button_position_row = 3
+
+    list_all_window_title = "Список всех графиков работы"
+    list_all_window_size = "1800x600"
+
+    update_window_title = "Редактирование графика работы"
+    update_window_size = "800x600"
+    submit_update_button_position_row = 3
+
+    form_items_to_draw = {
+        "work_schedule_title_entry": "Название:",
+    }
+
+    def set_controller(self):
+        return WorkScheduleController()
+
+    def draw_create_object_form(self, root: tkinter.Tk):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            self.controller.entries[field_name] = tkinter.Entry(root)
+            # Отрисовка списка
+            self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)
+
+    def list_all_objects_grid(self, root: tkinter.Tk):
+        all_work_schedules_table = WorkScheduleTable(root, columns=3, cell_width=265, cell_height=85)
+        all_work_schedules_table.draw_all()
+
+    def update_object_input_grid(self, root: tkinter.Tk, work_schedule_id: int):
+        work_schedule = WorkScheduleSerializer.prepare_data_to_print([WorkSchedule.get(work_schedule_id)])[0]
+        self.draw_update_work_schedule_form(root, work_schedule)
+
+    def draw_update_work_schedule_form(self, root, work_schedule):
+        for index, (field_name, label_name) in enumerate(self.form_items_to_draw.items()):
+            tkinter.Label(root, text=label_name).grid(row=index, column=0, padx=5, pady=5)
+            if "work_schedule_title_entry" in field_name:
+                self.controller.entries[field_name] = tkinter.Entry(root)
+                self.controller.entries[field_name].insert(0, work_schedule["work_schedule_title"])
             self.controller.entries[field_name].grid(row=index, column=1, padx=5, pady=5)

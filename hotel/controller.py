@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
 
 from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
-    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType
+    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer, WorkScheduleSerializer
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType, \
+    WorkSchedule
 from utils.utils import get_key_from_dict_by_value
 
 
@@ -230,3 +231,15 @@ class RoomTypeController(Controller):
 
         serialized_room_type = RoomTypeSerializer(title=hotel_room_type_title, description=hotel_room_type_description, price=hotel_room_type_price)
         RoomType.update(object_id, serialized_room_type)
+
+
+class WorkScheduleController(Controller):
+    def submit_create(self):
+        work_schedule_title = self.entries["work_schedule_title_entry"].get()
+        serialized_work_schedule = WorkScheduleSerializer(work_schedule_title=work_schedule_title)
+        WorkSchedule.create(serialized_work_schedule)
+
+    def submit_update(self, object_id):
+        work_schedule_title = self.entries["work_schedule_title_entry"].get()
+        serialized_work_schedule = WorkScheduleSerializer(work_schedule_title=work_schedule_title)
+        WorkSchedule.update(object_id, serialized_work_schedule)

@@ -3,9 +3,10 @@ from abc import abstractmethod
 from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType
+from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType, \
+    WorkSchedule
 from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
-    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer
+    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer, WorkScheduleSerializer
 
 
 class Table(tkinter.Canvas):
@@ -317,4 +318,33 @@ class RoomTypeTable(Table):
 
     def delete_room_type(self, room_type_id: int):
         RoomType.delete(room_type_id)
+        self.redraw()
+
+
+class WorkScheduleTable(Table):
+    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
+        self.parent = parent
+        self.all_work_schedule_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
+        self.rows = len(self.all_work_schedule_data)
+        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+
+    def update_data(self):
+        self.all_work_schedule_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
+
+    def draw_all(self):
+        self.pack(fill="both", expand=True)
+
+        self.set_cell(0, 0, "Номер")
+        self.set_cell(0, 1, "Название")
+        self.set_cell(0, 2, "")
+
+        for index, work_schedule in enumerate(self.all_work_schedule_data):
+            self.set_cell(index + 1, 0, work_schedule['id'])
+            self.set_cell(index + 1, 1, work_schedule['work_schedule_title'])
+
+            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_work_schedule, work_schedule["id"]))
+            self.set_button_cell(index + 1, 2, button)
+
+    def delete_work_schedule(self, work_schedule_id: int):
+        WorkSchedule.delete(work_schedule_id)
         self.redraw()
