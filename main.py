@@ -1,18 +1,20 @@
 from hotel.models import Employee
 from hotel.view import ClientView, EmployeeView, HotelRoomView, AdditionalServiceView, JobPositionView, DepartmentView, \
-    RoomTypeView
+    RoomTypeView, WorkScheduleView
 
 
 def main():
-    # client_view = ClientView()
-    # client_view.create_new_client_window()
-    # client_view.read_and_delete_all_clients_window()
-    # client_id = 5
-    # client_view.update_client_window(client_id)
+    #TODO: добавить дефолтное значение для combobox
 
-    # employee_view = EmployeeView()
+    # client_view = ClientView()
+    # client_view.create_new_view_window()
+    # client_view.read_and_delete_view_window()
+    # client_id = 5
+    # client_view.update_view_window(client_id)
+
+    employee_view = EmployeeView()
     # employee_view.create_new_employee_window()
-    # employee_view.read_and_delete_all_employees_window()
+    employee_view.read_and_delete_all_employees_window()
     # employee_id = 9
     # employee_view.update_employee_window(employee_id)
 
@@ -41,11 +43,17 @@ def main():
     # department_view_id = 1
     # department_view.update_view_window(department_view_id)
 
-    room_type = RoomTypeView()
+    # room_type = RoomTypeView()
     # room_type.create_new_view_window()
-    room_type.read_and_delete_view_window()
+    # room_type.read_and_delete_view_window()
     # room_type_id = 0
     # room_type.update_view_window(room_type_id)
+
+    # work_schedule = WorkScheduleView()
+    # work_schedule.create_new_view_window()
+    # work_schedule.read_and_delete_view_window()
+    # work_schedule_id = 10
+    # work_schedule.update_view_window(work_schedule_id)
 
     # hotel_controller = HotelController()
     # hotel_controller.create_new_client_window()

@@ -1,9 +1,11 @@
+from abc import abstractmethod
 from typing import List, Dict
 
 from utils.utils import insert_new_lines, convert_number_to_status
 
 
 class Serializer:
+    @abstractmethod
     def get_values_in_order(self, object_id=None) -> tuple:
         """
 
@@ -172,7 +174,7 @@ class JobPositionSerializer(Serializer):
         return result
 
     def get_values_in_order(self, object_id=None) -> tuple:
-        if object_id:
+        if object_id is not None:
             return tuple([self.job_title, object_id])
         return tuple([self.job_title])
 
@@ -194,7 +196,7 @@ class DepartmentSerializer(Serializer):
         self.department_title = department_title
 
     def get_values_in_order(self, object_id=None) -> tuple:
-        if object_id:
+        if object_id is not None:
             return tuple([self.department_title, object_id])
         return tuple([self.department_title])
 
@@ -220,6 +222,20 @@ class DepartmentSerializer(Serializer):
 
 
 class WorkScheduleSerializer(Serializer):
+    def __init__(self, work_schedule_title):
+        self.work_schedule_title = work_schedule_title
+
+    @staticmethod
+    def prepare_data_to_print(work_schedule_rows):
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in work_schedule_rows:
+            work_schedule_info_dict = {
+                "id": row[0],
+                "work_schedule_title": row[1],
+            }
+            result.append(work_schedule_info_dict)
+        return result
 
     @classmethod
     def get_all_as_dict(cls, rows) -> Dict:
@@ -228,6 +244,11 @@ class WorkScheduleSerializer(Serializer):
             result[row[0]] = row[1]
 
         return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.work_schedule_title, object_id])
+        return tuple([self.work_schedule_title])
 
 
 class HotelRoomSerializer(Serializer):

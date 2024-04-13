@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
-    JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer
+    JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
 
 
 class View:
@@ -20,18 +20,19 @@ class View:
         pass
         # self.renderer.draw_update_job_position_window(service_id)
 
+
 class ClientView:
     def __init__(self):
         self.renderer = ClientRenderer()
 
-    def create_new_client_window(self):
+    def create_new_view_window(self):
         # TODO: Add success message and error message to view
         self.renderer.create_new_client_window()
 
-    def read_and_delete_all_clients_window(self):
+    def read_and_delete_view_window(self):
         self.renderer.read_all_clients_window()
 
-    def update_client_window(self, client_id):
+    def update_view_window(self, client_id):
         self.renderer.draw_update_client_window(client_id)
 
 
@@ -118,3 +119,17 @@ class RoomTypeView(View):
 
     def update_view_window(self, room_type_id):
         self.renderer.draw_window_update(room_type_id)
+
+
+class WorkScheduleView(View):
+    def __init__(self):
+        self.renderer = WorkScheduleRenderer()
+
+    def create_new_view_window(self):
+        self.renderer.draw_window_create()
+
+    def read_and_delete_view_window(self):
+        self.renderer.draw_window_read_delete()
+
+    def update_view_window(self, work_schedule_id):
+        self.renderer.draw_window_update(work_schedule_id)
