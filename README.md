@@ -1,8 +1,10 @@
-Python 3.6.5
+Python 3.6.8
+Python 3.12.3 - новый
 ```
 Запуск кода: "C:/projects/hotel_automation/main.py" 
 Вывод списка установленный пакетов в окружении: "pip list"
 Компиляция проекта(Билд): "PyInstaller --add-data "hotel.accdb;." main.py"
+Актуальный python "https://www.python.org/"
 ```
 
 Список таблиц в бд:
