@@ -247,6 +247,8 @@ class Employee(DBObject):
 
     @classmethod
     def all(cls) -> List[str]:
+        print(DB_PATH)
+
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
