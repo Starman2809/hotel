@@ -9,7 +9,7 @@ from tkcalendar import Calendar
 from hotel.models import Client, JobPosition, Department, WorkSchedule, Employee, RoomType, AdditionalServiceType
 from db.serializers import ClientDataSerializer, EmployeeSerializer, AdditionalServiceSerializer, JobPositionSerializer, \
     DepartmentSerializer, RoomTypeSerializer, WorkScheduleSerializer
-from design_objects.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable, \
+from design.table import ClientsTable, EmployeesTable, HotelRoomTable, AdditionalServiceTable, JobPositionTable, \
     DepartmentTable, RoomTypeTable, WorkScheduleTable
 from hotel.controller import EmployeeController, ClientController, HotelRoomController, AdditionalServiceController, \
     Controller, JobPositionController, DepartmentController, RoomTypeController, WorkScheduleController

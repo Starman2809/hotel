@@ -1,7 +1,11 @@
+import sys
 from abc import abstractmethod
 
-from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
-    JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
+from PyQt6.QtWidgets import QApplication
+
+# from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
+#     JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
+from design.qt.table import QTClientsTable
 
 
 class View:
@@ -21,16 +25,22 @@ class View:
         # self.renderer.draw_update_job_position_window(service_id)
 
 
-class ClientView:
+class ClientView(View):
     def __init__(self):
-        self.renderer = ClientRenderer()
+        self.app = QApplication(sys.argv)
+        # self.renderer = ClientRenderer()
 
     def create_new_view_window(self):
         # TODO: Add success message and error message to view
         self.renderer.create_new_client_window()
 
     def read_and_delete_view_window(self):
-        self.renderer.read_all_clients_window()
+        self.__read_all_clients_window()
+
+    def __read_all_clients_window(self):
+        all_clients_table = QTClientsTable()
+        all_clients_table.show()
+        sys.exit(self.app.exec())
 
     def update_view_window(self, client_id):
         self.renderer.draw_update_client_window(client_id)

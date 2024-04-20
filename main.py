@@ -4,6 +4,8 @@ from PyQt6 import QtCore
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QGridLayout, QLabel, QLineEdit, QPushButton, QSpacerItem, QSizePolicy
 from PyQt6.QtCore import Qt
 
+from hotel.view import ClientView
+
 
 class MainForm(QWidget):
     def __init__(self):
@@ -78,10 +80,17 @@ class MainForm(QWidget):
 
 
 def main():
-    app = QApplication(sys.argv)
-    form = MainForm()
-    form.show()
-    sys.exit(app.exec())
+    print(123)
+    client_view = ClientView()
+    # client_view.create_new_view_window()
+    client_view.read_and_delete_view_window()
+    # client_id = 5
+    # client_view.update_view_window(client_id)
+    # pass
+    # app = QApplication(sys.argv)
+    # form = MainForm()
+    # form.show()
+    # sys.exit(app.exec())
 
 
 if __name__ == "__main__":
