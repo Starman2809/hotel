@@ -74,6 +74,10 @@ class ClientController(Controller):
 
         self.cleanup()
 
+    @staticmethod
+    def submit_delete(client_id):
+        Client.delete(client_id)
+
 
 class EmployeeController(Controller):
     def submit_create(self):
