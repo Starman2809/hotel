@@ -247,3 +247,9 @@ class WorkScheduleController(Controller):
         work_schedule_title = self.entries["work_schedule_title_entry"].get()
         serialized_work_schedule = WorkScheduleSerializer(work_schedule_title=work_schedule_title)
         WorkSchedule.update(object_id, serialized_work_schedule)
+
+
+class BookingController:
+    @staticmethod
+    def submit_create(room_id):
+        print(room_id)

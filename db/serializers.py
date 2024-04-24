@@ -269,7 +269,7 @@ class HotelRoomSerializer(Serializer):
                 "id": row[0],
                 "employee_full_name": f"{row[1]} {row[2]} {row[3]}",
                 "room_type_name": row[4],
-                "room_type_description": insert_new_lines(row[5], 40),
+                "room_type_description": row[5],
                 "room_type_price": row[6],
                 "active": convert_number_to_status(row[7]),
             }
@@ -312,7 +312,6 @@ class RoomTypeSerializer(Serializer):
             return tuple([self.title, self.description, self.price, object_id])
         return tuple([self.title, self.description, self.price])
 
-
 class AdditionalServiceSerializer(Serializer):
     def __init__(self, service_name, service_description, service_price):
         self.service_name = service_name
@@ -331,5 +330,28 @@ class AdditionalServiceSerializer(Serializer):
                 "service_price": row[3],
             }
             result.append(service_info_dict)
+
+        return result
+
+
+class BookingSerializer(Serializer):
+    @staticmethod
+    def prepare_data_to_print(booking_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in booking_rows:
+            booking_info_dict = {
+                "id": row[0],
+                "room_id": row[1],
+                "date_from": row[2],
+                "date_to": row[3],
+                "creation_date": row[4],
+                "payment_type": row[5],
+                "client": row[6],
+                "payment_status": row[7],
+                "final_price": row[8],
+                "employee_full_name": "{} {} {}".format(row[9], row[10], row[11])
+            }
+            result.append(booking_info_dict)
 
         return result

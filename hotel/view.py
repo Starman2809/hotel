@@ -3,9 +3,10 @@ from abc import abstractmethod
 
 from PyQt6.QtWidgets import QApplication
 
+from design.qt.form import QTBookingSearchForm
 # from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
 #     JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
-from design.qt.table import QTClientsTable
+from design.qt.table import QTClientsTable, QTBookingsTable
 
 
 class View:
@@ -23,27 +24,6 @@ class View:
     def update_view_window(self, object_id: int):
         pass
         # self.renderer.draw_update_job_position_window(service_id)
-
-
-class ClientView(View):
-    def __init__(self):
-        self.app = QApplication(sys.argv)
-        # self.renderer = ClientRenderer()
-
-    def create_new_view_window(self):
-        # TODO: Add success message and error message to view
-        self.renderer.create_new_client_window()
-
-    def read_and_delete_view_window(self):
-        self.__read_all_clients_window()
-
-    def __read_all_clients_window(self):
-        all_clients_table = QTClientsTable()
-        all_clients_table.show()
-        sys.exit(self.app.exec())
-
-    def update_view_window(self, client_id):
-        self.renderer.draw_update_client_window(client_id)
 
 
 class EmployeeView:
@@ -143,3 +123,47 @@ class WorkScheduleView(View):
 
     def update_view_window(self, work_schedule_id):
         self.renderer.draw_window_update(work_schedule_id)
+
+
+class ClientView(View):
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+        # self.renderer = ClientRenderer()
+
+    def create_new_view_window(self):
+        # TODO: Add success message and error message to view
+        self.renderer.create_new_client_window()
+
+    def read_and_delete_view_window(self):
+        self.__read_all_clients_window()
+
+    def __read_all_clients_window(self):
+        all_clients_table = QTClientsTable()
+        all_clients_table.show()
+        sys.exit(self.app.exec())
+
+    def update_view_window(self, client_id):
+        self.renderer.draw_update_client_window(client_id)
+
+
+class BookingView(View):
+    def __init__(self):
+        self.app = QApplication(sys.argv)
+
+    def search_available_window(self):
+        search_rooms_form = QTBookingSearchForm()
+        search_rooms_form.show()
+        sys.exit(self.app.exec())
+
+    # def create_new_view_window(self):
+    #     # TODO: Add success message and error message to view
+    #     self.renderer.create_new_client_window()
+    #
+    def read_and_delete_view_window(self):
+        all_clients_table = QTBookingsTable()
+        all_clients_table.show()
+        sys.exit(self.app.exec())
+
+    #
+    # def update_view_window(self, client_id):
+    #     self.renderer.draw_update_client_window(client_id)

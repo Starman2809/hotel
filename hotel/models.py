@@ -191,10 +191,6 @@ class Client(DBObject):
         cls.database_manager.close()
 
 
-class Booking:
-    pass
-
-
 class Payment:
     pass
 
@@ -504,13 +500,31 @@ class HotelRoom(DBObject):
         cursor.close()
         cls.database_manager.close()
 
+    @classmethod
+    def get_available_rooms(cls, date_from, date_to) -> List:
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        query_string = """SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] WHERE [Гостиничные номера].[id] NOT IN (SELECT room_id FROM [Бронирование] WHERE [Дата приезда] <= ? AND [Дата отъезда] >= ?) ORDER BY [Гостиничные номера].[id] ASC"""
+        values = (
+            date_to,
+            date_from
+        )
+        cursor.execute(query_string, values)
+
+        row = cursor.fetchall()
+
+        cursor.close()
+        cls.database_manager.close()
+
+        return row
 
 class RoomType(DBObject):
     id = None
     title = None
     description = None
     price = None
-
 
     query_string_create = """INSERT INTO [Категории номеров] ([Название], [Описание], [Стоимость]) VALUES (?,?,?)"""
     query_string_list = """SELECT * FROM [Категории номеров] ORDER BY [id] ASC"""
@@ -607,3 +621,8 @@ class AdditionalServiceType(DBObject):
 
         cursor.close()
         cls.database_manager.close()
+
+
+class Booking(DBObject):
+    query_string_create = """INSERT INTO [Бронирование] ([Номер комнаты], [Дата приезда], [Дата отъезда], [Дата бронирования], [Форма оплаты], [Клиент], [Статус оплаты], [Итоговая стоимость]) VALUES (?,?,?,?,?,?,?,?)"""
+    query_string_list = """SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество] FROM ([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id] ORDER BY [Бронирование].room_id ASC"""
