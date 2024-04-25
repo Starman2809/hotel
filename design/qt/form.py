@@ -125,23 +125,6 @@ class QTBookingSearchForm(QTBaseForm):
         # Создаем сеточный макет для полей формы
         form_layout = QGridLayout()
 
-        # # Создаем и добавляем названия полей и поля для ввода
-        # for i in range(5):
-        #     label = QLabel(f"Поле {i + 1}:")
-        #     label.setStyleSheet("color: #333; font-size: 16px;")
-        #     edit = QLineEdit()
-        #     edit.setStyleSheet("padding: 6px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px;"
-        #                        "background-color: #fff;")
-        #     edit.setObjectName(f"edit_{i}")  # Добавляем objectName для дальнейшей настройки стилей через CSS
-        #     form_layout.addWidget(label, i, 0)
-        #     form_layout.addWidget(edit, i, 1)
-        #
-        # # Привязываем события наведения курсора на поля ввода
-        # for i in range(5):
-        #     edit_widget = self.findChild(QLineEdit, f"edit_{i}")
-        #     if edit_widget:
-        #         edit_widget.installEventFilter(self)
-
         form_layout.addWidget(self.calendar_date_from, 0, 0, 5, 1)
         form_layout.addWidget(self.calendar_date_to, 0, 1, 5, 1)
 
