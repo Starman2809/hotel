@@ -43,3 +43,11 @@ QPushButton:hover {
     background-color: #0056b3;
 }
 """
+
+red_qt_push_button = """
+background-color: red; color: white;
+"""
+
+green_qt_push_button = """
+background-color: green; color: white;
+"""
