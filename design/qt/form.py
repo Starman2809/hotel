@@ -1,9 +1,10 @@
 from PyQt6 import QtCore
 from PyQt6.QtCore import Qt, QRect, QLocale
 from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QLabel, QGridLayout, QLineEdit, QSpacerItem, QSizePolicy,
-                             QPushButton, QCalendarWidget)
+                             QPushButton, QCalendarWidget, QHBoxLayout)
 
 from design.qt.table import QTClientsTable, QTAvailableRoomsTable
+from design.qt.window import QTAllActionsWindow
 
 
 class QTBaseForm(QWidget):
@@ -157,3 +158,64 @@ class QTBookingSearchForm(QTBaseForm):
 
         available_rooms = QTAvailableRoomsTable(date_from.toPyDate(), date_to.toPyDate())
         available_rooms.show()
+
+
+class LoginForm(QWidget):
+    window_title = "Авторизация"
+    window_geometry = QRect(100, 100, 400, 200)
+
+    def __init__(self, all_actions_window):
+        super().__init__()
+        self.all_actions_window = all_actions_window
+
+        self.setWindowTitle(self.window_title)
+        self.setGeometry(self.window_geometry)
+
+        # Create form elements
+        self.username_label = QLabel("Username:")
+        self.username_edit = QLineEdit()
+        self.password_label = QLabel("Password:")
+        self.password_edit = QLineEdit()
+        self.password_edit.setEchoMode(QLineEdit.EchoMode.Password)
+        self.login_button = QPushButton("Login")
+
+        # Create layout for form elements
+        form_layout = QVBoxLayout()
+        form_layout.addWidget(self.username_label)
+        form_layout.addWidget(self.username_edit)
+        form_layout.addWidget(self.password_label)
+        form_layout.addWidget(self.password_edit)
+
+        # Create layout for buttons
+        button_layout = QHBoxLayout()
+        button_layout.addWidget(self.login_button)
+
+        # Добавить QLabel для сообщения
+        self.error_label = QLabel("")
+        self.error_label.setStyleSheet("color: red;")  # Стиль для сообщения об ошибке
+        form_layout.addWidget(self.error_label)  # Разместить в макете
+
+        # Combine layouts and set main layout
+        main_layout = QVBoxLayout()
+        main_layout.addLayout(form_layout)
+        main_layout.addLayout(button_layout)
+        self.setLayout(main_layout)
+
+        # Подключить обработчики событий
+        self.login_button.clicked.connect(self.login_handler)
+
+    def login_handler(self):
+        # Получить введенные данные
+        username = self.username_edit.text()
+        password = self.password_edit.text()
+
+        # Проверка данных (заменить на свою логику)
+        if username == "admin" and password == "12345":
+            # Авторизация прошла успешно
+            print("Авторизация прошла успешно!")
+            self.hide()
+            self.all_actions_window.show()
+        else:
+            # Неверные логин/пароль
+            print("Неверные логин/пароль!")
+            self.error_label.setText("Неверный логин или пароль!")

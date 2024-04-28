@@ -3,7 +3,8 @@ from abc import abstractmethod
 
 from PyQt6.QtWidgets import QApplication
 
-from design.qt.form import QTBookingSearchForm, QTBaseForm
+from design.qt.form import QTBookingSearchForm, QTBaseForm, LoginForm
+from design.qt.style import login_form_style_sheet
 # from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
 #     JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
 from design.qt.table import QTClientsTable, QTBookingsTable
@@ -169,12 +170,11 @@ class BookingView(View):
     # def update_view_window(self, client_id):
     #     self.renderer.draw_update_client_window(client_id)
 
+
 class AllActionsView:
     def __init__(self):
         self.app = QApplication(sys.argv)
-
-    def show_all_actions_windows(self):
-        items_to_draw = {
+        self.items_to_draw = {
             "Бронирование": {
                 "create": QTBookingSearchForm().show,
                 "read": QTBookingsTable().show,
@@ -236,9 +236,17 @@ class AllActionsView:
                 "delete": self.on_submit_button_clicked
             },
         }
-        all_actions_window = QTAllActionsWindow(items_to_draw)
-        all_actions_window.show()
-        sys.exit(self.app.exec())
+        self.all_actions_window = QTAllActionsWindow(self.items_to_draw)
+
+    def show_auth_window(self):
+        login_form = LoginForm(self.all_actions_window)
+        login_form.setStyleSheet(login_form_style_sheet)
+        login_form.show()
+        self.app.exec()
+
+    def show_all_actions_windows(self):
+        self.all_actions_window.show()
+        self.app.exec()
 
     def on_submit_button_clicked(self):
         print(123)
