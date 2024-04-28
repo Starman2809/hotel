@@ -191,10 +191,6 @@ class Client(DBObject):
         cls.database_manager.close()
 
 
-class Payment:
-    pass
-
-
 class Employee(DBObject):
     id = None
     first_name = None
@@ -538,6 +534,7 @@ class RoomType(DBObject):
 
 
 class AdditionalServiceType(DBObject):
+    query_string_list = "SELECT * FROM [Типы дополнительных услуг] ORDER BY id ASC"
 
     @classmethod
     def create(cls, serialized_hotel_room: AdditionalServiceSerializer):
@@ -556,20 +553,6 @@ class AdditionalServiceType(DBObject):
 
         cursor.close()
         cls.database_manager.close()
-
-    @classmethod
-    def all(cls):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT * FROM [Типы дополнительных услуг] ORDER BY id ASC")
-
-        rows = cursor.fetchall()
-
-        cls.database_manager.close()
-
-        return rows
 
     @classmethod
     def delete(cls, service_id: int):
@@ -626,3 +609,7 @@ class AdditionalServiceType(DBObject):
 class Booking(DBObject):
     query_string_create = """INSERT INTO [Бронирование] ([Номер комнаты], [Дата приезда], [Дата отъезда], [Дата бронирования], [Форма оплаты], [Клиент], [Статус оплаты], [Итоговая стоимость]) VALUES (?,?,?,?,?,?,?,?)"""
     query_string_list = """SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество] FROM ([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id] ORDER BY [Бронирование].room_id ASC"""
+
+
+class PaymentType(DBObject):
+    query_string_list = "SELECT * FROM [Форма оплаты] ORDER BY id ASC"

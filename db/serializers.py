@@ -355,3 +355,18 @@ class BookingSerializer(Serializer):
             result.append(booking_info_dict)
 
         return result
+
+
+class PaymentTypeSerializer:
+    @staticmethod
+    def prepare_data_to_print(payment_type_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in payment_type_rows:
+            payment_type_info_dict = {
+                "id": row[0],
+                "payment_type_description": row[1],
+            }
+            result.append(payment_type_info_dict)
+
+        return result

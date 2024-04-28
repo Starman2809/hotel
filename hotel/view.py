@@ -7,7 +7,8 @@ from design.qt.form import QTBookingSearchForm, QTBaseForm, LoginForm
 from design.qt.style import login_form_style_sheet
 # from app.renderer import ClientRenderer, EmployeeRenderer, HotelRoomRenderer, AdditionalServiceRenderer, \
 #     JobPositionRenderer, DepartmentRenderer, RoomTypeRenderer, WorkScheduleRenderer
-from design.qt.table import QTClientsTable, QTBookingsTable
+from design.qt.table import QTClientsTable, QTBookingsTable, QTPaymentTypeTable, QTEmployeeTable, QTJobPositionTable, \
+    QTDepartmentTable, QTWorkScheduleTable, QTHotelRoomTable, QTRoomTypeTable, QTAdditionalServiceTable
 from design.qt.window import QTAllActionsWindow
 
 
@@ -187,51 +188,51 @@ class AllActionsView:
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
-            "Оплата": {
+            "Способы оплаты": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTPaymentTypeTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Сотрудники": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTEmployeeTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Должности": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTJobPositionTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Отделы": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTDepartmentTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "График работы": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTWorkScheduleTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Номера": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTHotelRoomTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Типы номеров": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTRoomTypeTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
             "Дополнительные услуги": {
                 "create": self.on_submit_button_clicked,
-                "read": self.on_submit_button_clicked,
+                "read": QTAdditionalServiceTable().show,
                 "update": self.on_submit_button_clicked,
                 "delete": self.on_submit_button_clicked
             },
