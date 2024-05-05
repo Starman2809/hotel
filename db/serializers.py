@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import List, Dict
 
-from utils.utils import insert_new_lines, convert_number_to_status
+from utils.utils import convert_number_to_status
 
 
 class Serializer:
@@ -13,6 +13,14 @@ class Serializer:
         :return: tuple of object's data
         """
         pass
+
+    @classmethod
+    def get_all_as_dict(cls, rows) -> Dict:
+        result = {}
+        for row in rows:
+            result[row[0]] = row[1]
+
+        return result
 
 
 class ClientDataSerializer(Serializer):
@@ -73,6 +81,20 @@ class ClientDataSerializer(Serializer):
             result.append(full_name)
         return result
 
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.first_name, self.last_name, self.patronymic, self.birthday_date,
+                          self.email, self.phone_number, self.passport_number_text, object_id])
+        return tuple([self.first_name, self.last_name, self.patronymic, self.birthday_date,
+                      self.email, self.phone_number, self.passport_number_text])
+
+    @classmethod
+    def get_all_as_dict(cls, rows) -> Dict:
+        result = {}
+        for row in rows:
+            result[row[0]] = "{} {} {}".format(row[1], row[2], row[3])
+
+        return result
 
 class EmployeeSerializer(Serializer):
 
@@ -159,6 +181,17 @@ class EmployeeSerializer(Serializer):
             result[row[0]] = f"{row[1]} {row[2]} {row[3]}"
 
         return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.last_name, self.first_name, self.patronymic, self.birthday_date,
+                          self.passport_number, self.job_position, self.email, self.phone_number,
+                          self.hiring_date, self.salary, self.department, self.work_schedule,
+                          self.work_status, object_id])
+        return tuple([self.last_name, self.first_name, self.patronymic, self.birthday_date,
+                      self.passport_number, self.job_position, self.email, self.phone_number,
+                      self.hiring_date, self.salary, self.department, self.work_schedule,
+                      self.work_status])
 
 
 class JobPositionSerializer(Serializer):
@@ -253,12 +286,13 @@ class WorkScheduleSerializer(Serializer):
 
 class HotelRoomSerializer(Serializer):
     def __init__(
-        self,
-        employee_id: int,
-        room_type_id: int,
+            self,
+            employee_id: int,
+            room_type_id: int,
     ):
         self.employee_id = employee_id
         self.room_type_id = room_type_id
+        self.status = True
 
     @staticmethod
     def prepare_data_to_print(hotel_room_rows) -> List:
@@ -276,6 +310,25 @@ class HotelRoomSerializer(Serializer):
             result.append(hotel_room_info_dict)
 
         return result
+
+    @staticmethod
+    def prepare_data_for_edit_form(hotel_room_rows) -> List:
+        result = []
+        # TODO: use keywords instead of number when parsing data from DB
+        for row in hotel_room_rows:
+            hotel_room_info_dict = {
+                "id": row[0],
+                "employee_id": row[1],
+                "room_type_id": row[2],
+            }
+            result.append(hotel_room_info_dict)
+
+        return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.employee_id, self.room_type_id, self.status, object_id])
+        return tuple([self.employee_id, self.room_type_id, self.status])
 
 
 class RoomTypeSerializer(Serializer):
@@ -300,7 +353,7 @@ class RoomTypeSerializer(Serializer):
             room_type_info_dict = {
                 "id": row[0],
                 "title": row[1],
-                "description": insert_new_lines(row[2], 40),
+                "description": row[2],
                 "price": row[3],
             }
             result.append(room_type_info_dict)
@@ -312,29 +365,18 @@ class RoomTypeSerializer(Serializer):
             return tuple([self.title, self.description, self.price, object_id])
         return tuple([self.title, self.description, self.price])
 
-class AdditionalServiceSerializer(Serializer):
-    def __init__(self, service_name, service_description, service_price):
-        self.service_name = service_name
-        self.service_description = service_description
-        self.service_price = float(service_price)
-
-    @staticmethod
-    def prepare_data_to_print(additional_service_type_rows) -> List:
-        result = []
-        # TODO: use keywords instead of number when parsing data from DB
-        for row in additional_service_type_rows:
-            service_info_dict = {
-                "id": row[0],
-                "service_name": row[1],
-                "service_description": insert_new_lines(row[2], 40),
-                "service_price": row[3],
-            }
-            result.append(service_info_dict)
-
-        return result
-
 
 class BookingSerializer(Serializer):
+    def __init__(self, room_id, date_from, date_to, booking_date, payment_type, client, payment_status, final_price):
+        self.room_id = int(room_id)
+        self.date_from = date_from
+        self.date_to = date_to
+        self.booking_date = booking_date
+        self.payment_type = int(payment_type)
+        self.client = int(client)
+        self.payment_status = payment_status
+        self.final_price = float(final_price)
+
     @staticmethod
     def prepare_data_to_print(booking_rows) -> List:
         result = []
@@ -350,14 +392,24 @@ class BookingSerializer(Serializer):
                 "client": row[6],
                 "payment_status": row[7],
                 "final_price": row[8],
-                "employee_full_name": "{} {} {}".format(row[9], row[10], row[11])
+                "employee_full_name": "{} {} {}".format(row[9], row[10], row[11]),
+                "client_full_name": "{} {} {}".format(row[12], row[13], row[14]),
+                "payment_type_description": row[15]
             }
             result.append(booking_info_dict)
 
         return result
 
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.room_id, self.date_from, self.date_to, self.booking_date, self.payment_type, self.client, self.payment_status, self.final_price, object_id])
+        return tuple([self.room_id, self.date_from, self.date_to, self.booking_date, self.payment_type, self.client, self.payment_status, self.final_price])
 
-class PaymentTypeSerializer:
+
+class PaymentTypeSerializer(Serializer):
+    def __init__(self, description):
+        self.description = description
+
     @staticmethod
     def prepare_data_to_print(payment_type_rows) -> List:
         result = []
@@ -365,8 +417,13 @@ class PaymentTypeSerializer:
         for row in payment_type_rows:
             payment_type_info_dict = {
                 "id": row[0],
-                "payment_type_description": row[1],
+                "description": row[1],
             }
             result.append(payment_type_info_dict)
 
         return result
+
+    def get_values_in_order(self, object_id=None) -> tuple:
+        if object_id is not None:
+            return tuple([self.description, object_id])
+        return tuple([self.description])
