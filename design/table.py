@@ -1,350 +1,575 @@
-import tkinter
-from abc import abstractmethod
-from tkinter import Button
 from functools import partial
 
-from hotel.models import Client, Employee, HotelRoom, AdditionalServiceType, JobPosition, Department, RoomType, \
-    WorkSchedule
-from db.serializers import ClientDataSerializer, EmployeeSerializer, HotelRoomSerializer, AdditionalServiceSerializer, \
-    JobPositionSerializer, DepartmentSerializer, RoomTypeSerializer, WorkScheduleSerializer
+from PyQt6.QtWidgets import QMainWindow, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget, QPushButton, QLineEdit, \
+    QComboBox, QGridLayout
+
+from db.serializers import (ClientDataSerializer, HotelRoomSerializer, BookingSerializer, PaymentTypeSerializer,
+                            EmployeeSerializer, JobPositionSerializer, DepartmentSerializer, WorkScheduleSerializer,
+                            RoomTypeSerializer)
+from design.button import SimpleButton
+from design.calendar import RussianCalendar
+
+from design.style import red_qt_push_button, green_qt_push_button, table_header_style, input_edit_style
+from hotel.controller import (ClientController, BookingController, PaymentTypeController, EmployeeController,
+                              JobPositionController, DepartmentController, WorkScheduleController, HotelRoomController,
+                              RoomTypeController)
+from hotel.models import (Client, HotelRoom, Booking, PaymentType, Employee, JobPosition, Department, WorkSchedule,
+                          RoomType)
 
 
-class Table(tkinter.Canvas):
-    def __init__(self, parent, rows=10, columns=3, cell_width=100, cell_height=30, **kwargs):
-        super().__init__(parent, **kwargs)
-        self.rows = rows
-        self.columns = columns
-        self.cell_width = cell_width
-        self.cell_height = cell_height
-        self.cells = {}
-        self.draw_grid()
+class QTBaseTable(QMainWindow):
+    window_title = "Table Example"
+    items_to_draw = ["col{1}" for i in range(10)]
 
-    def draw_grid(self):
-        for row in range(self.rows + 1):
-            self.create_line(0, row * self.cell_height, self.columns * self.cell_width, row * self.cell_height)
-        for col in range(self.columns + 1):
-            self.create_line(col * self.cell_width, 0, col * self.cell_width, self.rows * self.cell_height)
+    def __init__(self, width, rows=100):
+        super().__init__()
+        self.columns = len(self.items_to_draw) + 2
+        self.setWindowTitle(self.window_title)
+        self.setGeometry(100, 100, width, 600)
+        self._fill_content(rows)
 
-    def set_cell(self, row, col, value):
-        x0 = col * self.cell_width
-        y0 = row * self.cell_height
-        x1 = x0 + self.cell_width
-        y1 = y0 + self.cell_height
-        cell_id = self.create_text((x0 + x1) / 2, (y0 + y1) / 2, text=value)
-        self.cells[(row, col)] = cell_id
+    def _fill_content(self, rows):
+        # Создаем таблицу
+        self.tableWidget = self.create_table(rows=rows)
 
-    def set_button_cell(self, row, col, button: Button):
-        x0 = col * self.cell_width
-        y0 = row * self.cell_height
-        x1 = x0 + self.cell_width
-        y1 = y0 + self.cell_height
-        button.place(x=(x0 + x1) / 2, y=(y0 + y1) / 2, anchor="center")
+        # Заполняем таблицу данными
+        self.fill_table()
 
-    def draw_all(self):
-        pass
+        self.set_header_labels()
 
-    def redraw(self):
-        # Удаляем все объекты на Canvas
-        self.delete("all")
-        # Рисуем сетку заново
-        self.draw_grid()
-        # Обновляем данные внутри обьекта
-        self.update_data()
-        # Ваш код для рисования объектов заново
-        self.draw_all()
+        # Применяем стили для заголовков таблицы
+        header = self.tableWidget.horizontalHeader()
+        header.setStyleSheet(table_header_style)
 
-    @abstractmethod
+        # Устанавливаем растягивание столбцов по содержимому
+        self.tableWidget.resizeColumnsToContents()
+
+        # Создаем вертикальный Layout и добавляем в него таблицу
+        layout = QVBoxLayout()
+        layout.addWidget(self.tableWidget)
+
+        # Создаем центральный виджет и устанавливаем в него Layout
+        centralWidget = QWidget()
+        centralWidget.setLayout(layout)
+        self.setCentralWidget(centralWidget)
+
+    def create_table(self, rows):
+        tableWidget = QTableWidget()
+        tableWidget.setRowCount(rows)  # Устанавливаем количество строк
+        tableWidget.setColumnCount(self.columns)  # Устанавливаем количество столбцов
+        return tableWidget
+
+    def set_header_labels(self):
+        # Устанавливаем горизонтальные заголовки
+        self.tableWidget.setHorizontalHeaderLabels(self.items_to_draw)
+
+    def fill_table(self):
+        for row in range(100):
+            for col in range(self.columns):
+                item = QTableWidgetItem(f"Row {row + 1}, Col {col + 1}")
+                self.tableWidget.setItem(row, col, item)
+
     def update_data(self):
         pass
 
+    def show(self):
+        self.update_data()
+        super().show()
 
-class ClientsTable(Table):
-    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
+
+class QTClientsTable(QTBaseTable):
+    width = 1000
+    window_title = "Список всех клиентов"
+    items_to_draw = ["Фамилия", "Имя", "Отчество", "Дата рождения", "Электронная почта", "Номер телефона",
+                     "Номер паспорта", ]
+
+    def __init__(self):
         self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
         self.rows = len(self.all_clients_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+        super().__init__(width=self.width, rows=self.rows)
 
-    def update_data(self):
+    def fill_table(self):
+        for index, row in enumerate(self.all_clients_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["last_name"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["first_name"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["patronymic"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["birthday_date"]}"))
+            self.tableWidget.setItem(index, 4, QTableWidgetItem(f"{row["email"]}"))
+            self.tableWidget.setItem(index, 5, QTableWidgetItem(f"{row["phone_number"]}"))
+            self.tableWidget.setItem(index, 6, QTableWidgetItem(f"{row["passport_number"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 7, button_edit)
+
+            button_delete = QPushButton("Удалить")
+            button_delete.clicked.connect(partial(self.delete_client, row["id"]))
+            self.tableWidget.setCellWidget(index, 8, button_delete)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTClientForm
+        self.edit_form = QTClientForm(object_id)
+        self.edit_form.show()
+
+    def delete_client(self, client_id):
+        ClientController.submit_delete(client_id=client_id)
+        self.update_table()
+
+    def update_table(self):
         self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
-
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
-
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Фамилия")
-        self.set_cell(0, 2, "Имя")
-        self.set_cell(0, 3, "Отчество")
-        self.set_cell(0, 4, "Дата рождения")
-        self.set_cell(0, 5, "Электронная почта")
-        self.set_cell(0, 6, "Номер телефона")
-        self.set_cell(0, 7, "Номер паспорта")
-        self.set_cell(0, 8, "")
-
-        for index, client in enumerate(self.all_clients_data):
-            self.set_cell(index + 1, 0, client['id'])
-            self.set_cell(index + 1, 1, client['last_name'])
-            self.set_cell(index + 1, 2, client['first_name'])
-            self.set_cell(index + 1, 3, client['patronymic'])
-            self.set_cell(index + 1, 4, client['birthday_date'])
-            self.set_cell(index + 1, 5, client['email'])
-            self.set_cell(index + 1, 6, client['phone_number'])
-            self.set_cell(index + 1, 7, client['passport_number'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_client, client["id"]))
-            self.set_button_cell(index + 1, 8, button)
-
-    def delete_client(self, client_id: int):
-        Client.delete(client_id)
-        self.redraw()
+        self.tableWidget.clearContents()
+        self.fill_table()
 
 
-class EmployeesTable(Table):
-    def __init__(self, parent, columns=3, cell_width=50, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_employees_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
-        self.rows = len(self.all_employees_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+class QTBookingsTable(QTBaseTable):
+    width = 1000
+    window_title = "Список всех бронирований"
+    items_to_draw = ["id Номера", "ФИО сотрудника", "Дата приезда", "Дата отъезда", "Дата создания бронирования",
+                     "Форма оплаты", "Клиент", "Статус оплаты", "Итоговая стоимость"]
 
-    def update_data(self):
-        self.all_employees_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
+    def __init__(self):
+        self.all_data = BookingSerializer.prepare_data_to_print(Booking.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
 
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
-
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Фамилия")
-        self.set_cell(0, 2, "Имя")
-        self.set_cell(0, 3, "Отчество")
-        self.set_cell(0, 4, "Дата рождения")
-        self.set_cell(0, 5, "Номер паспорта")
-        self.set_cell(0, 6, "Должность")
-        self.set_cell(0, 7, "Электронная почта")
-        self.set_cell(0, 8, "Номер телефона")
-        self.set_cell(0, 9, "Дата найма")
-        self.set_cell(0, 10, "Зарплата")
-        self.set_cell(0, 11, "Отдел")
-        self.set_cell(0, 12, "График работы")
-        self.set_cell(0, 13, "Статус")
-        self.set_cell(0, 14, "")
-
-        for index, employee in enumerate(self.all_employees_data):
-            self.set_cell(index + 1, 0, employee['id'])
-            self.set_cell(index + 1, 1, employee['last_name'])
-            self.set_cell(index + 1, 2, employee['first_name'])
-            self.set_cell(index + 1, 3, employee['patronymic'])
-            self.set_cell(index + 1, 4, employee['birthday_date'])
-            self.set_cell(index + 1, 5, employee['passport_number'])
-            self.set_cell(index + 1, 6, employee['job_position'])
-            self.set_cell(index + 1, 7, employee['email'])
-            self.set_cell(index + 1, 8, employee['phone_number'])
-            self.set_cell(index + 1, 9, employee['hiring_date'])
-            self.set_cell(index + 1, 10, employee['salary'])
-            self.set_cell(index + 1, 11, employee['department'])
-            self.set_cell(index + 1, 12, employee['work_schedule'])
-            self.set_cell(index + 1, 13, employee['work_status'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_employee, employee["id"]))
-            self.set_button_cell(index + 1, 14, button)
-
-    def delete_employee(self, employee_id: int):
-        Employee.delete(employee_id)
-        self.redraw()
+    def _fill_content(self, rows):
+        self.input_data = {}
+        self.line_edit_date = RussianCalendar()
+        self.line_edit_date.setFixedSize(400, 300)
+        self.toggle_button = QPushButton('Enable/Disable Calendar', self)
+        self.toggle_button.clicked.connect(self.toggle_calendar)
+        self.use_selected_date = True
 
 
-class HotelRoomTable(Table):
-    def __init__(self, parent, columns=7, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_hotel_rooms_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
-        self.rows = len(self.all_hotel_rooms_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+        self.line_edit_client = QLineEdit()
+        self.line_edit_client.setStyleSheet(input_edit_style)
+        self.room_type_combo_box = QComboBox()
 
-    def update_data(self):
-        self.all_hotel_rooms_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
+        room_type_list = RoomType.all_as_dict()
+        self.room_type_combo_box.addItem("", "")
+        for item_id, text in room_type_list.items():
+            self.room_type_combo_box.addItem(text, item_id)
 
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
+        self.input_data["date"] = self.line_edit_date
+        self.input_data["use_selected_date"] = self.use_selected_date
+        self.input_data["client"] = self.line_edit_client
+        self.input_data["room_type"] = self.room_type_combo_box
 
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "ФИО сотрудника")
-        self.set_cell(0, 2, "Тип")
-        self.set_cell(0, 3, "Описание")
-        self.set_cell(0, 4, "Цена")
-        self.set_cell(0, 5, "Активна")
-        self.set_cell(0, 6, "")
+        self.search_button = SimpleButton("Поиск", self.search_booking)
 
-        for index, hotel_room in enumerate(self.all_hotel_rooms_data):
-            self.set_cell(index + 1, 0, hotel_room['id'])
-            self.set_cell(index + 1, 1, hotel_room['employee_full_name'])
-            self.set_cell(index + 1, 2, hotel_room['room_type_name'])
-            self.set_cell(index + 1, 3, hotel_room['room_type_description'])
-            self.set_cell(index + 1, 4, hotel_room['room_type_price'])
-            self.set_cell(index + 1, 5, hotel_room['active'])
+        # Создаем таблицу
+        self.tableWidget = self.create_table(rows=rows)
 
-            if hotel_room['active'] == "Да":
-                button = tkinter.Button(self.parent, text="Деактивировать", command=partial(self.deactivate_hotel_room, hotel_room["id"]))
+        # Заполняем таблицу данными
+        self.fill_table()
+
+        self.set_header_labels()
+
+        # Применяем стили для заголовков таблицы
+        header = self.tableWidget.horizontalHeader()
+        header.setStyleSheet(table_header_style)
+
+        # Устанавливаем растягивание столбцов по содержимому
+        self.tableWidget.resizeColumnsToContents()
+
+        # Создаем вертикальный Layout и добавляем в него таблицу
+        layout = QVBoxLayout()
+        grid_layout = QGridLayout()
+        grid_layout.addWidget(self.line_edit_date, 0, 0)
+        grid_layout.addWidget(self.line_edit_client, 0, 1)
+        grid_layout.addWidget(self.room_type_combo_box, 0, 2)
+        grid_layout.addWidget(self.search_button, 0, 3)
+        grid_layout.addWidget(self.toggle_button, 1, 0)
+
+        layout.addLayout(grid_layout)
+        layout.addWidget(self.tableWidget)
+
+        # Создаем центральный виджет и устанавливаем в него Layout
+        centralWidget = QWidget()
+        centralWidget.setLayout(layout)
+        self.setCentralWidget(centralWidget)
+
+    def toggle_calendar(self):
+        # Инвертируем текущее состояние enabled у календаря
+        self.line_edit_date.setEnabled(not self.line_edit_date.isEnabled())
+        if self.input_data["use_selected_date"] is False:
+            self.input_data["use_selected_date"] = True
+        else:
+            self.input_data["use_selected_date"] = False
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["room_id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["employee_full_name"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["date_from"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["date_to"]}"))
+            self.tableWidget.setItem(index, 4, QTableWidgetItem(f"{row["creation_date"]}"))
+            self.tableWidget.setItem(index, 5, QTableWidgetItem(f"{row["payment_type_description"]}"))
+            self.tableWidget.setItem(index, 6, QTableWidgetItem(f"{row["client_full_name"]}"))
+            self.tableWidget.setItem(index, 7, QTableWidgetItem(f"{row["payment_status"]}"))
+            self.tableWidget.setItem(index, 8, QTableWidgetItem(f"{row["final_price"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 9, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 10, button)
+
+    def create_edit_form(self, booking_id):
+        from design.form import QTBookingForm
+        self.edit_form = QTBookingForm(booking_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        BookingController.submit_delete(object_id=object_id)
+        self.all_data = BookingSerializer.prepare_data_to_print(Booking.all())
+        self.update_table()
+
+    def update_table(self):
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+    def search_booking(self):
+        self.all_data = BookingSerializer.prepare_data_to_print(Booking.search_booking(self.input_data))
+        self.update_table()
+
+
+class QTAvailableRoomsTable(QTBaseTable):
+    width = 1000
+    window_title = "Список доступных комнат"
+    items_to_draw = ["id Номера", "Сотрудник", "Категория", "Описание", "Стоимость"]
+
+    def __init__(self, date_from, date_to):
+        self.date_from = date_from
+        self.date_to = date_to
+
+        self.available_rooms_data = HotelRoomSerializer.prepare_data_to_print(
+            HotelRoom.get_available_rooms(date_from, date_to))
+        self.rows = len(self.available_rooms_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.available_rooms_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["employee_full_name"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["room_type_name"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["room_type_description"]}"))
+            self.tableWidget.setItem(index, 4, QTableWidgetItem(f"{row["room_type_price"]}"))
+
+            button = QPushButton("Забронировать")
+            button.clicked.connect(partial(self.create_booking_form, self.date_from, self.date_to, row["id"], row["room_type_price"]))
+            self.tableWidget.setCellWidget(index, 5, button)
+
+    def create_booking_form(self, date_from, date_to, room_id, room_type_price):
+        from design.form import QTBookingForm
+        self.booking_form = QTBookingForm(object_id=None, date_from=date_from, date_to=date_to, room_id=room_id, room_type_price=room_type_price)
+        self.booking_form.show()
+
+
+class QTPaymentTypeTable(QTBaseTable):
+    width = 1000
+    window_title = "Способы оплаты"
+    items_to_draw = ["id Оплаты", "Описание оплаты"]
+
+    def __init__(self):
+        self.all_data = PaymentTypeSerializer.prepare_data_to_print(PaymentType.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["description"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 2, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 3, button)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTPaymentTypeForm
+        self.edit_form = QTPaymentTypeForm(object_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        PaymentTypeController.submit_delete(object_id=object_id)
+        self.update_table()
+
+    def update_table(self):
+        self.all_data = PaymentTypeSerializer.prepare_data_to_print(PaymentType.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+
+class QTEmployeeTable(QTBaseTable):
+    width = 1000
+    window_title = "Сотрудники"
+    items_to_draw = ["Номер", "Фамилия", "Имя", "Отчество", "Дата рождения", "Номер паспорта", "Должность",
+                     "Электронная почта", "Номер телефона", "Дата найма", "Зарплата", "Отдел", "График работы",
+                     "Статус"]
+
+    def __init__(self):
+        self.all_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["last_name"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["first_name"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["patronymic"]}"))
+            self.tableWidget.setItem(index, 4, QTableWidgetItem(f"{row["birthday_date"]}"))
+            self.tableWidget.setItem(index, 5, QTableWidgetItem(f"{row["passport_number"]}"))
+            self.tableWidget.setItem(index, 6, QTableWidgetItem(f"{row["job_position"]}"))
+            self.tableWidget.setItem(index, 7, QTableWidgetItem(f"{row["email"]}"))
+            self.tableWidget.setItem(index, 8, QTableWidgetItem(f"{row["phone_number"]}"))
+            self.tableWidget.setItem(index, 9, QTableWidgetItem(f"{row["hiring_date"]}"))
+            self.tableWidget.setItem(index, 10, QTableWidgetItem(f"{row["salary"]}"))
+            self.tableWidget.setItem(index, 11, QTableWidgetItem(f"{row["department"]}"))
+            self.tableWidget.setItem(index, 12, QTableWidgetItem(f"{row["work_schedule"]}"))
+            self.tableWidget.setItem(index, 13, QTableWidgetItem(f"{row["work_status"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 14, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 15, button)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTEmployeeForm
+        self.edit_form = QTEmployeeForm(object_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        EmployeeController.submit_delete(object_id=object_id)
+        self.update_table()
+
+    def update_table(self):
+        self.all_data = EmployeeSerializer.prepare_data_to_print(Employee.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+
+class QTJobPositionTable(QTBaseTable):
+    width = 1000
+    window_title = "Должности"
+    items_to_draw = ["Номер", "Название"]
+    columns = len(items_to_draw) + 1
+
+    def __init__(self):
+        self.all_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["job_title"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 2, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 3, button)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTJobPositionForm
+        self.edit_form = QTJobPositionForm(object_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        JobPositionController.submit_delete(object_id=object_id)
+        self.update_table()
+
+    def update_table(self):
+        self.all_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+
+class QTDepartmentTable(QTBaseTable):
+    width = 1000
+    window_title = "Отделы"
+    items_to_draw = ["Номер", "Название"]
+
+    def __init__(self):
+        self.all_data = DepartmentSerializer.prepare_data_to_print(Department.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["department_title"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 2, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 3, button)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTDepartmentForm
+        self.edit_form = QTDepartmentForm(object_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        DepartmentController.submit_delete(object_id=object_id)
+        self.update_table()
+
+    def update_table(self):
+        self.all_data = DepartmentSerializer.prepare_data_to_print(Department.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+
+class QTWorkScheduleTable(QTBaseTable):
+    width = 1000
+    window_title = "График работы"
+    items_to_draw = ["Номер", "Название"]
+    columns = len(items_to_draw) + 1
+
+    def __init__(self):
+        self.all_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["work_schedule_title"]}"))
+
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 2, button_edit)
+
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 3, button)
+
+    def create_edit_form(self, object_id):
+        from design.form import QTWorkScheduleForm
+        self.edit_form = QTWorkScheduleForm(object_id)
+        self.edit_form.show()
+
+    def delete_item(self, object_id):
+        WorkScheduleController.submit_delete(object_id=object_id)
+        self.update_table()
+
+    def update_table(self):
+        self.all_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
+
+
+class QTHotelRoomTable(QTBaseTable):
+    width = 1200
+    window_title = "Номера"
+    items_to_draw = ["Номер", "ФИО сотрудника", "Тип", "Описание", "Цена", "Активна", "Действие"]
+
+    def __init__(self):
+        self.all_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
+
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["employee_full_name"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["room_type_name"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["room_type_description"]}"))
+            self.tableWidget.setItem(index, 4, QTableWidgetItem(f"{row["room_type_price"]}"))
+            self.tableWidget.setItem(index, 5, QTableWidgetItem(f"{row["active"]}"))
+
+            if row['active'] == "Да":
+                button = QPushButton("Деактивировать")
+                button.setStyleSheet(red_qt_push_button)
+                button.clicked.connect(partial(self.deactivate_hotel_room, row["id"]))
             else:
-                button = tkinter.Button(self.parent, text="Активировать", command=partial(self.activate_hotel_room, hotel_room["id"]))
+                button = QPushButton("Активировать")
+                button.setStyleSheet(green_qt_push_button)
+                button.clicked.connect(partial(self.activate_hotel_room, row["id"]))
 
-            self.set_button_cell(index + 1, 6, button)
+            self.tableWidget.setCellWidget(index, 6, button)
 
-    def deactivate_hotel_room(self, room_id: int):
-        HotelRoom.deactivate(room_id)
-        self.redraw()
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 7, button_edit)
 
-    def activate_hotel_room(self, room_id: int):
-        HotelRoom.activate(room_id)
-        self.redraw()
+            button_delete = QPushButton("Удалить")
+            button_delete.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 8, button_delete)
 
+    def create_edit_form(self, object_id):
+        from design.form import QTHotelRoomForm
+        self.edit_form = QTHotelRoomForm(object_id)
+        self.edit_form.show()
 
-class AdditionalServiceTable(Table):
-    def __init__(self, parent, columns=5, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_services_data = AdditionalServiceSerializer.prepare_data_to_print(AdditionalServiceType.all())
-        self.rows = len(self.all_services_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+    def delete_item(self, object_id):
+        HotelRoomController.submit_delete(object_id=object_id)
+        self.update_table()
 
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
+    def activate_hotel_room(self, object_id):
+        HotelRoom.activate(object_id)
+        self.update_table()
 
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Название")
-        self.set_cell(0, 2, "Описание")
-        self.set_cell(0, 3, "Стоимость")
-        self.set_cell(0, 4, "")
+    def deactivate_hotel_room(self, object_id):
+        HotelRoom.deactivate(object_id)
+        self.update_table()
 
-        for index, service in enumerate(self.all_services_data):
-            self.set_cell(index + 1, 0, service['id'])
-            self.set_cell(index + 1, 1, service['service_name'])
-            self.set_cell(index + 1, 2, service['service_description'])
-            self.set_cell(index + 1, 3, service['service_price'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_service, service["id"]))
-            self.set_button_cell(index + 1, 4, button)
-
-    def delete_service(self, client_id: int):
-        AdditionalServiceType.delete(client_id)
-        self.redraw()
-
-    def update_data(self):
-        self.all_services_data = AdditionalServiceSerializer.prepare_data_to_print(AdditionalServiceType.all())
+    def update_table(self):
+        self.all_data = HotelRoomSerializer.prepare_data_to_print(HotelRoom.all())
+        self.tableWidget.clearContents()
+        self.fill_table()
 
 
-class JobPositionTable(Table):
-    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_job_positions_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
-        self.rows = len(self.all_job_positions_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
+class QTRoomTypeTable(QTBaseTable):
+    width = 1000
+    window_title = "Типы номеров"
+    items_to_draw = ["Номер", "Название", "Описание", "Стоимость"]
 
-    def update_data(self):
-        self.all_job_positions_data = JobPositionSerializer.prepare_data_to_print(JobPosition.all())
+    def __init__(self):
+        self.all_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
+        self.rows = len(self.all_data)
+        super().__init__(width=self.width, rows=self.rows)
 
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
+    def fill_table(self):
+        for index, row in enumerate(self.all_data):
+            self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["id"]}"))
+            self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["title"]}"))
+            self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["description"]}"))
+            self.tableWidget.setItem(index, 3, QTableWidgetItem(f"{row["price"]}"))
 
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Название")
-        self.set_cell(0, 2, "")
+            button_edit = QPushButton("Редактировать")
+            button_edit.clicked.connect(partial(self.create_edit_form, row["id"]))
+            self.tableWidget.setCellWidget(index, 4, button_edit)
 
-        for index, job_position in enumerate(self.all_job_positions_data):
-            self.set_cell(index + 1, 0, job_position['id'])
-            self.set_cell(index + 1, 1, job_position['job_title'])
+            button = QPushButton("Удалить")
+            button.clicked.connect(partial(self.delete_item, row["id"]))
+            self.tableWidget.setCellWidget(index, 5, button)
 
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_job_position, job_position["id"]))
-            self.set_button_cell(index + 1, 2, button)
+    def create_edit_form(self, object_id):
+        from design.form import QTRoomTypeForm
+        self.edit_form = QTRoomTypeForm(object_id)
+        self.edit_form.show()
 
-    def delete_job_position(self, job_position_id: int):
-        JobPosition.delete(job_position_id)
-        self.redraw()
+    def delete_item(self, object_id):
+        RoomTypeController.submit_delete(object_id=object_id)
+        self.update_table()
 
-
-class DepartmentTable(Table):
-    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_departments_data = DepartmentSerializer.prepare_data_to_print(Department.all())
-        self.rows = len(self.all_departments_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
-
-    def update_data(self):
-        self.all_departments_data = DepartmentSerializer.prepare_data_to_print(Department.all())
-
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
-
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Название")
-        self.set_cell(0, 2, "")
-
-        for index, department in enumerate(self.all_departments_data):
-            self.set_cell(index + 1, 0, department['id'])
-            self.set_cell(index + 1, 1, department['department_title'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_department, department["id"]))
-            self.set_button_cell(index + 1, 2, button)
-
-    def delete_department(self, department_id: int):
-        Department.delete(department_id)
-        self.redraw()
-
-
-class RoomTypeTable(Table):
-    def __init__(self, parent, columns=5, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_room_types_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
-        self.rows = len(self.all_room_types_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
-
-    def update_data(self):
-        self.all_room_types_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
-
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
-
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Название")
-        self.set_cell(0, 2, "Описание")
-        self.set_cell(0, 3, "Стоимость")
-        self.set_cell(0, 4, "")
-
-        for index, room_type in enumerate(self.all_room_types_data):
-            self.set_cell(index + 1, 0, room_type['id'])
-            self.set_cell(index + 1, 1, room_type['title'])
-            self.set_cell(index + 1, 2, room_type['description'])
-            self.set_cell(index + 1, 3, room_type['price'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_room_type, room_type["id"]))
-            self.set_button_cell(index + 1, 4, button)
-
-    def delete_room_type(self, room_type_id: int):
-        RoomType.delete(room_type_id)
-        self.redraw()
-
-
-class WorkScheduleTable(Table):
-    def __init__(self, parent, columns=3, cell_width=100, cell_height=30, **kwargs):
-        self.parent = parent
-        self.all_work_schedule_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
-        self.rows = len(self.all_work_schedule_data)
-        super().__init__(parent, self.rows, columns, cell_width, cell_height, **kwargs)
-
-    def update_data(self):
-        self.all_work_schedule_data = WorkScheduleSerializer.prepare_data_to_print(WorkSchedule.all())
-
-    def draw_all(self):
-        self.pack(fill="both", expand=True)
-
-        self.set_cell(0, 0, "Номер")
-        self.set_cell(0, 1, "Название")
-        self.set_cell(0, 2, "")
-
-        for index, work_schedule in enumerate(self.all_work_schedule_data):
-            self.set_cell(index + 1, 0, work_schedule['id'])
-            self.set_cell(index + 1, 1, work_schedule['work_schedule_title'])
-
-            button = tkinter.Button(self.parent, text="Удалить", command=partial(self.delete_work_schedule, work_schedule["id"]))
-            self.set_button_cell(index + 1, 2, button)
-
-    def delete_work_schedule(self, work_schedule_id: int):
-        WorkSchedule.delete(work_schedule_id)
-        self.redraw()
+    def update_table(self):
+        self.all_data = RoomTypeSerializer.prepare_data_to_print(RoomType.all())
+        self.tableWidget.clearContents()
+        self.fill_table()

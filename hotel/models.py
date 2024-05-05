@@ -1,11 +1,10 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List
-
 from config.settings import DB_PATH
 from db.manager import DatabaseManager
 from db.serializers import (ClientDataSerializer, JobPositionSerializer, DepartmentSerializer, WorkScheduleSerializer,
-                            EmployeeSerializer, Serializer, HotelRoomSerializer, RoomTypeSerializer,
-                            AdditionalServiceSerializer)
+                            EmployeeSerializer, Serializer, RoomTypeSerializer,
+                            PaymentTypeSerializer)
 
 
 class DBObject(ABC):
@@ -81,11 +80,6 @@ class DBObject(ABC):
         cursor.close()
         cls.database_manager.close()
 
-    # @classmethod
-    # @abstractmethod
-    # def create(cls, serialized_object: BaseSerializer):
-    #     pass
-
 
 class Client(DBObject):
     id = None
@@ -97,99 +91,23 @@ class Client(DBObject):
     phone = None
     passport_number = None
 
-    @classmethod
-    def all(cls):
-        cls.database_manager.connect()
+    query_string_create = "INSERT INTO [Клиенты] ([Имя], [Фамилия], [Отчество], [Дата Рождения], [Электронная почта], [Номер телефона], [Номер паспорта]) VALUES (?,?,?,?,?,?,?)"
+    query_string_list = "SELECT * FROM [Клиенты] ORDER BY Фамилия ASC"
+    query_string_get = "SELECT * FROM [Клиенты] WHERE id = ?"
+    query_string_update = "UPDATE [Клиенты] SET [Имя] = ?,  [Фамилия] = ?, [Отчество] = ?, [Дата Рождения] = ?, [Электронная почта] = ?, [Номер телефона] = ?, [Номер паспорта] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Клиенты] WHERE id = ?"
 
+    @classmethod
+    def all_as_dict(cls):
+        cls.database_manager.connect()
         connection = cls.database_manager.connection
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM Клиенты ORDER BY Фамилия ASC")
-
+        cursor.execute("SELECT * FROM [Клиенты] ORDER BY id ASC")
         rows = cursor.fetchall()
-
-        cls.database_manager.close()
-
-        return rows
-
-    @classmethod
-    def create(cls, serialized_client: ClientDataSerializer):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-
-        query_string = """INSERT INTO Клиенты ([Имя], [Фамилия], [Отчество], [Дата Рождения], [Электронная почта], [Номер телефона], [Номер паспорта]) VALUES (?,?,?,?,?,?,?)"""
-        values = (
-            serialized_client.first_name,
-            serialized_client.last_name,
-            serialized_client.patronymic,
-            serialized_client.birthday_date,
-            serialized_client.email,
-            serialized_client.phone_number,
-            serialized_client.passport_number_text,
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
         cursor.close()
         cls.database_manager.close()
 
-    @classmethod
-    def get(cls, client_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """SELECT * FROM Клиенты WHERE id = ?"""
-        cursor.execute(query_string, (client_id,))
-
-        row = cursor.fetchone()
-
-        cursor.close()
-        cls.database_manager.close()
-
-        return row
-
-    @classmethod
-    def update(cls, client_id: int, serialized_client: ClientDataSerializer):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-
-        query_string = f"""UPDATE Клиенты SET [Имя] = ?,  [Фамилия] = ?, [Отчество] = ?, [Дата Рождения] = ?, [Электронная почта] = ?, [Номер телефона] = ?, [Номер паспорта] = ? WHERE id = ?"""
-
-        values = (
-            serialized_client.first_name,
-            serialized_client.last_name,
-            serialized_client.patronymic,
-            serialized_client.birthday_date,
-            serialized_client.email,
-            serialized_client.phone_number,
-            serialized_client.passport_number_text,
-            client_id,
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
-    def delete(cls, client_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """DELETE FROM Клиенты WHERE id = ?"""
-        cursor.execute(query_string, (client_id,))
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
+        return ClientDataSerializer.get_all_as_dict(rows)
 
 class Employee(DBObject):
     id = None
@@ -207,128 +125,27 @@ class Employee(DBObject):
     work_schedule = None
     work_status = None
 
-    @classmethod
-    def create(cls, serialized_client: EmployeeSerializer):
-        cls.database_manager.connect()
+    query_string_create = "INSERT INTO Персонал ([Фамилия], [Имя], [Отчество], [Дата Рождения], [Номер Паспорта], [Должность], [Электронная почта], [Номер телефона], [Дата Найма], [Зарплата], [Отдел], [График Работы], [Статус]) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"
+    query_string_list = "SELECT [Персонал].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Персонал].[Дата рождения], [Персонал].[Номер Паспорта], [Должности].[Название], [Персонал].[Электронная почта], [Персонал].[Номер телефона], [Персонал].[Дата найма], [Персонал].[Зарплата], [Отделы].[Название], [График работы].[Название], [Персонал].[Статус] FROM (([Персонал] LEFT JOIN [Отделы] ON ([Персонал].[Отдел] = [Отделы].[id])) LEFT JOIN [Должности] ON ([Персонал].[Должность] = [Должности].[id])) LEFT JOIN [График работы] ON ([Персонал].[График работы] = [График работы].[id]) ORDER BY [Персонал].[id] ASC"
+    query_string_get = "SELECT * FROM [Персонал] WHERE id = ?"
+    query_string_update = "UPDATE Персонал SET [Фамилия] = ?, [Имя] = ?, [Отчество] = ?, [Дата Рождения] = ?, [Номер Паспорта] = ?, [Должность] = ?, [Электронная почта] = ?, [Номер телефона] = ?, [Дата Найма] = ?, [Зарплата] = ?, [Отдел] = ?, [График Работы] = ?, [Статус] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Персонал] WHERE id = ?"
 
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-
-        query_string = """INSERT INTO Персонал ([Фамилия], [Имя], [Отчество], [Дата Рождения], [Номер Паспорта], [Должность], [Электронная почта], [Номер телефона], [Дата Найма], [Зарплата], [Отдел], [График Работы], [Статус]) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)"""
-        values = (
-            serialized_client.last_name,
-            serialized_client.first_name,
-            serialized_client.patronymic,
-            serialized_client.birthday_date,
-            serialized_client.passport_number,
-            serialized_client.job_position,
-            serialized_client.email,
-            serialized_client.phone_number,
-            serialized_client.hiring_date,
-            serialized_client.salary,
-            serialized_client.department,
-            serialized_client.work_schedule,
-            serialized_client.work_status,
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
-    def all(cls) -> List[str]:
-        print(DB_PATH)
-
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        cursor.execute("SELECT [Персонал].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Персонал].[Дата рождения], [Персонал].[Номер Паспорта], [Должности].[Название], [Персонал].[Электронная почта], [Персонал].[Номер телефона], [Персонал].[Дата найма], [Персонал].[Зарплата], [Отделы].[Название], [График работы].[Название], [Персонал].[Статус] FROM (([Персонал] LEFT JOIN [Отделы] ON ([Персонал].[Отдел] = [Отделы].[id])) LEFT JOIN [Должности] ON ([Персонал].[Должность] = [Должности].[id])) LEFT JOIN [График работы] ON ([Персонал].[График работы] = [График работы].[id]) ORDER BY [Персонал].[id] ASC")
-        rows = cursor.fetchall()
-
-        cursor.close()
-        cls.database_manager.close()
-
-        return rows
 
     @classmethod
     def all_as_dict(cls):
         return EmployeeSerializer.get_all_as_dict(cls.all())
-
-    @classmethod
-    def get(cls, employee_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """SELECT * FROM Персонал WHERE id = ?"""
-        cursor.execute(query_string, (employee_id,))
-
-        row = cursor.fetchone()
-
-        cursor.close()
-        cls.database_manager.close()
-
-        return row
-
-    @classmethod
-    def update(cls, employee_id: int, serialized_employee: EmployeeSerializer):
-
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-
-        query_string = """UPDATE Персонал SET [Фамилия] = ?, [Имя] = ?, [Отчество] = ?, [Дата Рождения] = ?, [Номер Паспорта] = ?, [Должность] = ?, [Электронная почта] = ?, [Номер телефона] = ?, [Дата Найма] = ?, [Зарплата] = ?, [Отдел] = ?, [График Работы] = ?, [Статус] = ? WHERE id = ?"""
-        values = (
-            serialized_employee.last_name,
-            serialized_employee.first_name,
-            serialized_employee.patronymic,
-            serialized_employee.birthday_date,
-            serialized_employee.passport_number,
-            serialized_employee.job_position,
-            serialized_employee.email,
-            serialized_employee.phone_number,
-            serialized_employee.hiring_date,
-            serialized_employee.salary,
-            serialized_employee.department,
-            serialized_employee.work_schedule,
-            serialized_employee.work_status,
-            employee_id,
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
-    def delete(cls, employee_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """DELETE FROM Персонал WHERE id = ?"""
-        cursor.execute(query_string, (employee_id,))
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
 
 
 class JobPosition(DBObject):
     id = None
     title = None
 
-    query_string_create = """INSERT INTO [Должности] ([Название]) VALUES (?)"""
-    query_string_list = """SELECT * FROM [Должности] ORDER BY [Название] ASC"""
-    query_string_get = """SELECT * FROM [Должности] WHERE id = ?"""
-    query_string_update = """UPDATE [Должности] SET [Название] = ? WHERE id = ?"""
-    query_string_delete = """DELETE FROM [Должности] WHERE id = ?"""
-
+    query_string_create = "INSERT INTO [Должности] ([Название]) VALUES (?)"
+    query_string_list = "SELECT * FROM [Должности] ORDER BY [Название] ASC"
+    query_string_get = "SELECT * FROM [Должности] WHERE id = ?"
+    query_string_update = "UPDATE [Должности] SET [Название] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Должности] WHERE id = ?"
 
     @classmethod
     def all_as_dict(cls):
@@ -402,25 +219,11 @@ class HotelRoom(DBObject):
     # Доступна ли комната для использования или нет впринципе, мб ее закрыли на ремонт и ее нельзя бронировать впринципе
     status = True
 
-    query_string_list = """SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC"""
-
-    @classmethod
-    def create(cls, serialized_hotel_room: HotelRoomSerializer):
-        cls.database_manager.connect()
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """INSERT INTO [Гостиничные номера] ([Сотрудник], [Категория], [Статус]) VALUES (?,?,?)"""
-        values = (
-            serialized_hotel_room.employee_id,
-            serialized_hotel_room.room_type_id,
-            True
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
+    query_string_create = "INSERT INTO [Гостиничные номера] ([Сотрудник], [Категория], [Статус]) VALUES (?,?,?)"
+    query_string_list = "SELECT [Гостиничные номера].[id], [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Категории Номеров].[Название], [Категории Номеров].[Описание], [Категории Номеров].[Стоимость], [Гостиничные номера].[Статус] FROM ([Гостиничные номера] LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Категории номеров] ON [Гостиничные номера].[Категория] = [Категории номеров].[id] ORDER BY [Гостиничные номера].[id] ASC"
+    query_string_get = "SELECT * FROM [Гостиничные номера] WHERE id = ?"
+    query_string_update = "UPDATE [Гостиничные номера] SET [Сотрудник] = ?, [Категория] = ?, [Статус] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Гостиничные номера] WHERE id = ?"
 
     @classmethod
     def deactivate(cls, room_id: int):
@@ -461,42 +264,6 @@ class HotelRoom(DBObject):
         cls.database_manager.close()
 
     @classmethod
-    def get(cls, room_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """SELECT * FROM [Гостиничные номера] WHERE id = ?"""
-        cursor.execute(query_string, (room_id,))
-
-        row = cursor.fetchone()
-
-        cursor.close()
-        cls.database_manager.close()
-
-        return row
-
-    @classmethod
-    def update(cls, hotel_room_id: int, serialized_hotel_room: HotelRoomSerializer):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-
-        query_string = """UPDATE [Гостиничные номера] SET [Сотрудник] = ?, [Категория] = ? WHERE id = ?"""
-        values = (
-            serialized_hotel_room.employee_id,
-            serialized_hotel_room.room_type_id,
-            hotel_room_id
-        )
-        cursor.execute(query_string, values)
-
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
     def get_available_rooms(cls, date_from, date_to) -> List:
         cls.database_manager.connect()
 
@@ -516,6 +283,7 @@ class HotelRoom(DBObject):
 
         return row
 
+
 class RoomType(DBObject):
     id = None
     title = None
@@ -533,83 +301,85 @@ class RoomType(DBObject):
         return RoomTypeSerializer.get_all_as_dict(cls.all())
 
 
-class AdditionalServiceType(DBObject):
-    query_string_list = "SELECT * FROM [Типы дополнительных услуг] ORDER BY id ASC"
+class Booking(DBObject):
+    query_string_create = "INSERT INTO [Бронирование] ([room_id], [Дата приезда], [Дата отъезда], [Дата бронирования], [Форма оплаты], [Клиент], [Статус оплаты], [Итоговая стоимость]) VALUES (?,?,?,?,?,?,?,?)"
+    query_string_list = "SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Клиенты].[Фамилия], [Клиенты].[Имя], [Клиенты].[Отчество], [Форма оплаты].[Описание оплаты] FROM ((([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Клиенты] ON [Бронирование].[Клиент] = [Клиенты].[id]) LEFT JOIN [Форма оплаты] ON [Бронирование].[Форма оплаты] = [Форма оплаты].[id] ORDER BY [Бронирование].[id] DESC"
+    query_string_get = "SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Клиенты].[Фамилия], [Клиенты].[Имя], [Клиенты].[Отчество], [Форма оплаты].[Описание оплаты] FROM ((([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Клиенты] ON [Бронирование].[Клиент] = [Клиенты].[id]) LEFT JOIN [Форма оплаты] ON [Бронирование].[Форма оплаты] = [Форма оплаты].[id] WHERE [Бронирование].[id] = ?"
+    query_string_update = "UPDATE [Бронирование] SET [room_id] = ?, [Дата приезда] = ?, [Дата отъезда] = ?, [Дата бронирования] = ?, [Форма оплаты] = ?, [Клиент] = ?, [Статус оплаты] = ?, [Итоговая стоимость] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Бронирование] WHERE id = ?"
 
     @classmethod
-    def create(cls, serialized_hotel_room: AdditionalServiceSerializer):
-        cls.database_manager.connect()
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """INSERT INTO [Типы дополнительных услуг] ([Название], [Описание], [Стоимость]) VALUES (?,?,?)"""
-        values = (
-            serialized_hotel_room.service_name,
-            serialized_hotel_room.service_description,
-            serialized_hotel_room.service_price
-        )
-        cursor.execute(query_string, values)
+    def search_booking(cls, input_data) -> List:
+        where_query_part = ""
+        list_of_search_queries = []
+        if input_data["use_selected_date"] is True:
+            date = input_data["date"].selectedDate().toPyDate()
+            list_of_search_queries.append(f"([Бронирование].[Дата приезда] <= #{date}# AND [Бронирование].[Дата отъезда] >= #{date}#)")
+            where_query_part = " WHERE "
+        if input_data["client"].text() != "":
+            client = input_data["client"].text()
+            list_of_search_queries.append(f"([Клиенты].[Фамилия] LIKE '{client}%')")
+            where_query_part = " WHERE "
+        if input_data["room_type"].currentData() != "":
+            room_type = input_data["room_type"].currentData()
+            list_of_search_queries.append(f"([Гостиничные номера].[Категория] = {room_type})")
+            where_query_part = " WHERE "
 
-        connection.commit()
+        where_query_final_part = where_query_part + " AND ".join(list_of_search_queries)
 
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
-    def delete(cls, service_id: int):
-        cls.database_manager.connect()
-
-        connection = cls.database_manager.connection
-        cursor = connection.cursor()
-        query_string = """DELETE FROM [Типы дополнительных услуг] WHERE id = ?"""
-        cursor.execute(query_string, (service_id,))
-        connection.commit()
-
-        cursor.close()
-        cls.database_manager.close()
-
-    @classmethod
-    def get(cls, service_id: int):
         cls.database_manager.connect()
 
         connection = cls.database_manager.connection
         cursor = connection.cursor()
-        query_string = """SELECT * FROM [Типы дополнительных услуг] WHERE id = ?"""
-        cursor.execute(query_string, (service_id,))
 
-        row = cursor.fetchone()
+        query_string = "SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество], [Клиенты].[Фамилия], [Клиенты].[Имя], [Клиенты].[Отчество], [Форма оплаты].[Описание оплаты] FROM ((([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id]) LEFT JOIN [Клиенты] ON [Бронирование].[Клиент] = [Клиенты].[id]) LEFT JOIN [Форма оплаты] ON [Бронирование].[Форма оплаты] = [Форма оплаты].[id]" + where_query_final_part
+
+        cursor.execute(query_string)
+
+        row = cursor.fetchall()
 
         cursor.close()
         cls.database_manager.close()
 
         return row
 
-    @classmethod
-    def update(cls, service_id: int, serialized_service: AdditionalServiceSerializer):
-        cls.database_manager.connect()
+class PaymentType(DBObject):
+    query_string_create = "INSERT INTO [Форма оплаты] ([Описание оплаты]) VALUES (?)"
+    query_string_list = "SELECT * FROM [Форма оплаты] ORDER BY id ASC"
+    query_string_get = "SELECT * FROM [Форма оплаты] WHERE id = ?"
+    query_string_update = "UPDATE [Форма оплаты] SET [Описание оплаты] = ? WHERE id = ?"
+    query_string_delete = "DELETE FROM [Форма оплаты] WHERE [id] = ?"
 
+    @classmethod
+    def all_as_dict(cls):
+        cls.database_manager.connect()
         connection = cls.database_manager.connection
         cursor = connection.cursor()
+        cursor.execute("SELECT * FROM [Форма оплаты] ORDER BY id ASC")
+        rows = cursor.fetchall()
+        cursor.close()
+        cls.database_manager.close()
 
-        query_string = """UPDATE [Типы дополнительных услуг] SET [Название] = ?,  [Описание] = ?, [Стоимость] = ? WHERE id = ?"""
+        return PaymentTypeSerializer.get_all_as_dict(rows)
 
-        values = (
-            serialized_service.service_name,
-            serialized_service.service_description,
-            serialized_service.service_price,
-            service_id,
-        )
-        cursor.execute(query_string, values)
 
-        connection.commit()
+class Auth:
+    database_manager = DatabaseManager(DB_PATH)
+
+    @classmethod
+    def is_user_in_db(cls, username, password):
+        cls.database_manager.connect()
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+        cursor.execute("SELECT * FROM [Администраторы]")
+        columns = [column[0] for column in cursor.description]
+        rows_as_dict = [dict(zip(columns, row)) for row in cursor.fetchall()]
 
         cursor.close()
         cls.database_manager.close()
 
+        for item in rows_as_dict:
+            if item["Login"] == username and item["password"] == password:
+                return True
 
-class Booking(DBObject):
-    query_string_create = """INSERT INTO [Бронирование] ([Номер комнаты], [Дата приезда], [Дата отъезда], [Дата бронирования], [Форма оплаты], [Клиент], [Статус оплаты], [Итоговая стоимость]) VALUES (?,?,?,?,?,?,?,?)"""
-    query_string_list = """SELECT [Бронирование].*, [Персонал].[Фамилия], [Персонал].[Имя], [Персонал].[Отчество] FROM ([Бронирование] LEFT JOIN [Гостиничные номера] ON [Бронирование].[room_id] = [Гостиничные номера].[id]) LEFT JOIN [Персонал] ON [Гостиничные номера].[Сотрудник] = [Персонал].[id] ORDER BY [Бронирование].room_id ASC"""
-
-
-class PaymentType(DBObject):
-    query_string_list = "SELECT * FROM [Форма оплаты] ORDER BY id ASC"
+        return False
