@@ -84,12 +84,51 @@ class QTClientsTable(QTBaseTable):
                      "Номер паспорта", ]
 
     def __init__(self):
-        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
-        self.rows = len(self.all_clients_data)
+        self.all_data = ClientDataSerializer.prepare_data_to_print(Client.all())
+        self.rows = len(self.all_data)
         super().__init__(width=self.width, rows=self.rows)
 
+    def _fill_content(self, rows):
+        self.input_data = {}
+
+        self.line_edit_client = QLineEdit()
+        self.line_edit_client.setStyleSheet(input_edit_style)
+
+        self.input_data["client"] = self.line_edit_client
+
+        self.search_button = SimpleButton("Поиск", self.search_client)
+
+        # Создаем таблицу
+        self.tableWidget = self.create_table(rows=rows)
+
+        # Заполняем таблицу данными
+        self.fill_table()
+
+        self.set_header_labels()
+
+        # Применяем стили для заголовков таблицы
+        header = self.tableWidget.horizontalHeader()
+        header.setStyleSheet(table_header_style)
+
+        # Устанавливаем растягивание столбцов по содержимому
+        self.tableWidget.resizeColumnsToContents()
+
+        # Создаем вертикальный Layout и добавляем в него таблицу
+        layout = QVBoxLayout()
+        grid_layout = QGridLayout()
+        grid_layout.addWidget(self.line_edit_client, 0, 0)
+        grid_layout.addWidget(self.search_button, 0, 1)
+
+        layout.addLayout(grid_layout)
+        layout.addWidget(self.tableWidget)
+
+        # Создаем центральный виджет и устанавливаем в него Layout
+        centralWidget = QWidget()
+        centralWidget.setLayout(layout)
+        self.setCentralWidget(centralWidget)
+
     def fill_table(self):
-        for index, row in enumerate(self.all_clients_data):
+        for index, row in enumerate(self.all_data):
             self.tableWidget.setItem(index, 0, QTableWidgetItem(f"{row["last_name"]}"))
             self.tableWidget.setItem(index, 1, QTableWidgetItem(f"{row["first_name"]}"))
             self.tableWidget.setItem(index, 2, QTableWidgetItem(f"{row["patronymic"]}"))
@@ -112,14 +151,17 @@ class QTClientsTable(QTBaseTable):
         self.edit_form.show()
 
     def delete_client(self, client_id):
+        self.all_data = ClientDataSerializer.prepare_data_to_print(Client.all())
         ClientController.submit_delete(client_id=client_id)
         self.update_table()
 
     def update_table(self):
-        self.all_clients_data = ClientDataSerializer.prepare_data_to_print(Client.all())
         self.tableWidget.clearContents()
         self.fill_table()
 
+    def search_client(self):
+        self.all_data = ClientDataSerializer.prepare_data_to_print(Client.search_client(self.input_data))
+        self.update_table()
 
 class QTBookingsTable(QTBaseTable):
     width = 1000

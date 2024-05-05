@@ -109,6 +109,33 @@ class Client(DBObject):
 
         return ClientDataSerializer.get_all_as_dict(rows)
 
+    @classmethod
+    def search_client(cls, input_data) -> List:
+        where_query_part = ""
+        client_search_query = ""
+        if input_data["client"].text() != "":
+            client = input_data["client"].text()
+            client_search_query = f"([Клиенты].[Фамилия] LIKE '{client}%')"
+            where_query_part = " WHERE "
+
+        where_query_final_part = where_query_part + client_search_query
+
+        cls.database_manager.connect()
+
+        connection = cls.database_manager.connection
+        cursor = connection.cursor()
+
+        query_string = "SELECT * FROM [Клиенты]" + where_query_final_part
+
+        cursor.execute(query_string)
+
+        row = cursor.fetchall()
+
+        cursor.close()
+        cls.database_manager.close()
+
+        return row
+
 class Employee(DBObject):
     id = None
     first_name = None
@@ -342,6 +369,7 @@ class Booking(DBObject):
         cls.database_manager.close()
 
         return row
+
 
 class PaymentType(DBObject):
     query_string_create = "INSERT INTO [Форма оплаты] ([Описание оплаты]) VALUES (?)"
